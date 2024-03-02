@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common"
+import { CanActivate, ExecutionContext, HttpException, HttpStatus, Injectable } from "@nestjs/common"
 import { AuthService } from "../auth.service";
 
 @Injectable()
@@ -11,7 +11,7 @@ export class AuthenticatedGuard implements CanActivate {
       if ((userinDb.company === undefined && request.route.path == '/profile/complete') || userinDb.company) {
         return request.isAuthenticated();
       } else {
-        return false;
+        throw new HttpException('Complete Profile', HttpStatus.NO_CONTENT); // Customize the response code here
       }
     } else {
       return false;
