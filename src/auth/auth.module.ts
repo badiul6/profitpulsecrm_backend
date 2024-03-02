@@ -13,6 +13,6 @@ import { User, UserSchema } from './schema';
 ],
   providers: [AuthService, SessionSerializer, LocalStrategy],
   controllers: [AuthController],
-  exports:[MongooseModule]
+  exports:[MongooseModule, AuthService]
 })
 export class AuthModule { }

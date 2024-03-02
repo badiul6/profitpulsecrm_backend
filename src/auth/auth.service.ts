@@ -1,5 +1,5 @@
 import { ConflictException, ForbiddenException, Injectable } from '@nestjs/common';
-import { AuthDto } from './dto';
+import { AuthDto, ReqUser } from './dto';
 import * as argon from 'argon2';
 import { User } from './schema';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
@@ -49,6 +49,9 @@ export class AuthService {
             roles: user.roles
             
         }
+    }
+    async checkUser(user: ReqUser){
+        return await this.userModel.findById(user.id).exec();
     }
     sessionStore(){
         return MongoStore.create({

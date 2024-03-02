@@ -10,7 +10,7 @@ import { AuthModule } from 'src/auth/auth.module';
   providers: [ProfileService],
   controllers: [ProfileController],
   imports: [
-    NestjsFormDataModule,
+    // NestjsFormDataModule,
     MongooseModule.forFeature([{ name: Company.name, schema: CompanySchema }]),
     AuthModule
   ]
