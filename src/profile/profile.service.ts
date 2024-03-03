@@ -15,6 +15,11 @@ export class ProfileService {
         @InjectModel(User.name) private userModel: Model<User>) { }
 
     async createCompany(user: ReqUser, companydto: CompanyDto) {
+        //check if company already exists
+        const userinDb= await this.userModel.findById(user.id).exec();
+        if(userinDb.company){
+            throw new ConflictException('Company already exist');
+        }
         //converts image to base64 format
         const logoStr = companydto.logo.buffer.toString('base64');
 
@@ -34,10 +39,9 @@ export class ProfileService {
             await company.save();
 
             //establish relation by updating the user(OWNER)
-            await this.userModel.findByIdAndUpdate(user.id, {
-                company: company.id,
-            }, { new: true }).exec();
-
+            userinDb.company= company.id
+            await userinDb.save();
+            
             return;
         } catch (error) {
             if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
