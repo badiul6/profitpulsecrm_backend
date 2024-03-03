@@ -47,7 +47,6 @@ export class AuthService {
         return {
             id: user.id,
             roles: user.roles
-            
         }
     }
     async checkUser(user: ReqUser){
@@ -59,9 +58,16 @@ export class AuthService {
             touchAfter: 24 * 3600 // time period in seconds
         })
     }
-    signin(){
+    async signin(user: ReqUser){
+        const userinDb= await this.userModel.findById(user.id).exec();
+        var complete= true;
+        if(userinDb.company=== undefined){
+            complete= false;
+        }
         return {
-            message: 'User logged in'
+            message: 'User logged in',
+            isCompleted: complete,
+            roles: user.roles
         };
     }
     signout(user:any){

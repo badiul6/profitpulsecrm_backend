@@ -6,7 +6,6 @@ import { ContactService } from './contact.service';
 import { ReqUser } from 'src/auth/dto';
 import { ContactFileDto } from './dto';
 import { FormDataRequest } from 'nestjs-form-data';
-import { Request } from 'express';
 
 @Controller('contact')
 export class ContactController {
@@ -23,5 +22,4 @@ export class ContactController {
     @UseGuards(AuthenticatedGuard)
     me(@Req() req: Request){
     }
-
 }
