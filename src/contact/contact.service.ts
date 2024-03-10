@@ -34,7 +34,15 @@ export class ContactService {
             return;
         }
     }
+    async getContacts(user: ReqUser){
+        const userinDB = await this.userModel.findById(user.id);
+        const contacts= await this.contactModel.find({
+            company:userinDB.company
+        }).exec();
+        return contacts;
+
+    }
 
 
-    
+
 }
