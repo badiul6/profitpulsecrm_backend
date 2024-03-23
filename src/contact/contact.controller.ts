@@ -4,7 +4,7 @@ import { AuthenticatedGuard, RolesGuard } from 'src/auth/guard';
 import { Role } from 'src/auth/schema';
 import { ContactService } from './contact.service';
 import { ReqUser } from 'src/auth/dto';
-import { ContactFileDto } from './dto';
+import { ConnectGmailDto, ContactFileDto } from './dto';
 import { FormDataRequest } from 'nestjs-form-data';
 
 @Controller('contact')
@@ -25,10 +25,16 @@ export class ContactController {
         return this.contactService.getContacts(user);
     }
 
-    
-
-    @Post('me')
+    @Post('connectgmail')
     @UseGuards(AuthenticatedGuard)
-    me(@Req() req: Request){
+    connectGmail(@GetUser() user: ReqUser, @Body() connectionDto: ConnectGmailDto){
+        return this.contactService.connectGmail(user, connectionDto);
     }
+    @Get('getmessages')
+    @UseGuards(AuthenticatedGuard)
+    getGmailMessages(@GetUser() user: ReqUser){
+        return this.contactService.getEmailMessages(user);
+    }
+
+   
 }

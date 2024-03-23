@@ -5,6 +5,7 @@
   import { MongooseModule } from '@nestjs/mongoose';
 import { ContactModule } from './contact/contact.module';
 import { NestjsFormDataModule } from 'nestjs-form-data';
+import { MailerModule } from '@nestjs-modules/mailer';
 
   @Module({
     imports: [
