@@ -38,7 +38,7 @@ export class ContactController {
 
     @Post('send-marketing-emails')
     @UseGuards(AuthenticatedGuard, RolesGuard)
-    @Roles(Role.SAGENT, Role.MAGENT)
+    @Roles(Role.MAGENT)
     sendEmails(@GetUser() user: ReqUser, @Body() emailDto: MarketingEmailsDto){
         return this.contactService.sendMarketingEmails(user, emailDto);
     }
