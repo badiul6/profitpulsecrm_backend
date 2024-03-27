@@ -27,14 +27,16 @@ export class TemplateService {
             console.error(error);
         }
     }
-    async getTemplate(user: ReqUser){
-        try{
-            const templates= await this.templateModel.find({user:user.id}).sort({updatedAt:-1}).exec();
+
+    async getTemplate(user: ReqUser) {
+        try {
+            const templates = await this.templateModel.find({ user: user.id }).sort({ updatedAt: -1 }).exec();
             return templates;
-        }catch(error){
+        } catch (error) {
             console.error(error);
         }
     }
+
     async updateTemplate(user: ReqUser, templateDto: TemplateDto) {
         const template = await this.templateModel.findOneAndUpdate(
             { name: templateDto.name, user: user.id },
@@ -58,6 +60,7 @@ export class TemplateService {
         }
         return;
     }
+    
     async deleteTemplate(name: string, user: ReqUser) {
         const template = await this.templateModel.findOneAndDelete({ name, user: user.id }).exec();
         if (template == null) {

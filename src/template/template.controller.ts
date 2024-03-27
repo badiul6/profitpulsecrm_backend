@@ -25,8 +25,6 @@ export class TemplateController {
         return this.templateService.getTemplate(user);
     }
     
-
-
     @Patch('update')
     @UseGuards(AuthenticatedGuard, RolesGuard)
     @Roles(Role.MAGENT)
