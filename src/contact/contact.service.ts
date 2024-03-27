@@ -1,17 +1,16 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { ConnectGmailDto, ContactFileDto } from './dto';
+import { ConnectGmailDto, ContactFileDto, MarketingEmailsDto } from './dto';
 import * as xlsx from 'xlsx';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from 'src/auth/schema';
 import { Model } from 'mongoose';
 import { ReqUser } from 'src/auth/dto';
 import { Connection, Contact } from './schema';
-import * as nodeMailer from 'nodemailer';
-import { GoogleApis, gmail_v1, google } from 'googleapis';
+import { google } from 'googleapis';
 import { ConfigService } from '@nestjs/config';
 var parseMessage = require('gmail-api-parse-message');
 var Batchelor = require('batchelor');
-
+import Handlebars from 'handlebars';
 @Injectable()
 export class ContactService {
     constructor(
@@ -19,8 +18,6 @@ export class ContactService {
         @InjectModel(User.name) private userModel: Model<User>,
         @InjectModel(Connection.name) private connectionModel: Model<Connection>,
         private config: ConfigService) {
-
-
     }
 
     async importFile(user: ReqUser, fileDto: ContactFileDto) {
@@ -85,23 +82,23 @@ export class ContactService {
         }
         const refresh_token = connection.refresh_token;
 
-        try{
+        try {
             const oAuth2Client = new google.auth.OAuth2(
                 this.config.get('ClIENT_ID'),
                 this.config.get('CLIENT_SECRET'),
                 this.config.get('REDIRECT_URI'));
-    
+
             oAuth2Client.setCredentials({ refresh_token: refresh_token });
             const gmail = google.gmail({
                 version: 'v1',
                 auth: oAuth2Client
             });
-    
+
             const res = await gmail.users.messages.list({ userId: 'me', maxResults: 50 });
             const msgs = res.data.messages;
-    
+
             const at = await oAuth2Client.getAccessToken();
-    
+
             var batch = new Batchelor({
                 'uri': 'https://www.googleapis.com/batch/gmail/v1/',
                 'method': 'POST',
@@ -112,11 +109,11 @@ export class ContactService {
                     'Content-Type': 'multipart/mixed'
                 }
             });
-    
-    
+
+
             for (const msg of msgs) {
                 batch.add({
-    
+
                     'method': 'GET',
                     'path': `/gmail/v1/users/me/messages/${msg.id}?format=full`
                 });
@@ -127,7 +124,7 @@ export class ContactService {
                     if (err) {
                         console.log("Error: " + err.toString());
                     } else {
-    
+
                         for (const msg of response.parts) {
                             if (msg.statusCode == 200) {
                                 const parse = parseMessage(msg.body);
@@ -150,12 +147,67 @@ export class ContactService {
             }
             return response;
         }
-        catch(error){
+        catch (error) {
             throw new NotFoundException();
         }
-       
-    }
-   
 
+    }
+    async sendMarketingEmails(user: ReqUser, emailDto: MarketingEmailsDto) {
+        const connection = await this.connectionModel.findOne({
+            user: user.id
+        }).exec();
+
+        if (!connection) {
+            throw new NotFoundException('Connection to gmail Not Found');
+        }
+        const userinDB = await this.userModel.findById(user.id).exec();
+        if (!userinDB) {
+            throw new NotFoundException('User Not Found')
+        }
+
+        try {
+            const oAuth2Client = new google.auth.OAuth2(
+                this.config.get('ClIENT_ID'),
+                this.config.get('CLIENT_SECRET'),
+                this.config.get('REDIRECT_URI'));
+
+            oAuth2Client.setCredentials({ refresh_token: connection.refresh_token });
+            const gmail = google.gmail({
+                version: 'v1',
+                auth: oAuth2Client
+            });
+            const emailAddress=(await gmail.users.getProfile({userId:'me'})).data.emailAddress;
+
+            const userDetails = await this.contactModel.find({ company: userinDB.company, email: { $in: emailDto.mailing_list } }, 'fullname email').exec();
+            const foundEmails = userDetails.map(user => user.email);
+            emailDto.mailing_list = emailDto.mailing_list.filter(email => foundEmails.includes(email));
+
+            const template = Handlebars.compile(emailDto.html_template);
+
+            for (var i = 0; i < emailDto.mailing_list.length; i++) {
+
+                const html = template({ name: userDetails[i].fullname });
+
+                const raw = [
+                    `From: ${userinDB.fullname}< ${emailAddress}>`,
+                    `To: ${userDetails[i].email}`,
+                    'Content-Type: text/html; charset=utf-8',
+                    'MIME-Version: 1.0',
+                    `Subject: ${emailDto.subject}`,
+                    '',
+                    html,
+                ].join('\n');
+                gmail.users.messages.send({
+                    userId: 'me',
+                    requestBody: {
+                        raw: Buffer.from(raw).toString('base64')
+                    }
+                });
+            }
+        }
+        catch (error) {
+            throw new NotFoundException()
+        }
+    }
 
 }
