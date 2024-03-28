@@ -7,6 +7,7 @@ import { ContactModule } from './contact/contact.module';
 import { NestjsFormDataModule } from 'nestjs-form-data';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { TemplateModule } from './template/template.module';
+import { WebsiteModule } from './website/website.module';
 
   @Module({
     imports: [
@@ -24,6 +25,7 @@ import { TemplateModule } from './template/template.module';
       AuthModule,
       ProfileModule,
       ContactModule,
-      TemplateModule],
+      TemplateModule,
+      WebsiteModule],
        })
   export class AppModule {}

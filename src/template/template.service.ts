@@ -30,8 +30,11 @@ export class TemplateService {
 
     async getTemplate(user: ReqUser) {
         try {
-            const templates = await this.templateModel.find({ user: user.id }).sort({ updatedAt: -1 }).exec();
-            return templates;
+            const templates = await this.templateModel.find(
+                { user: user.id },
+                { _id: 0, name: 1, body: 1, }
+            ).sort({ updatedAt: -1 }).exec();
+            return {"templates": templates};
         } catch (error) {
             console.error(error);
         }
@@ -44,7 +47,7 @@ export class TemplateService {
             { new: true }
         ).exec();
         if (!template) {
-            throw new NotFoundException('Template not found.');
+            throw new NotFoundException('Ttemplatesemplate not found.');
         }
         return;
     }
@@ -60,7 +63,7 @@ export class TemplateService {
         }
         return;
     }
-    
+
     async deleteTemplate(name: string, user: ReqUser) {
         const template = await this.templateModel.findOneAndDelete({ name, user: user.id }).exec();
         if (template == null) {
