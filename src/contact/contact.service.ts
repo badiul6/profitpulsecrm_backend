@@ -1,5 +1,5 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { ConnectGmailDto, ContactFileDto, MarketingEmailsDto } from './dto';
+import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ConnectGmailDto, ContactDto, ContactFileDto, MarketingEmailsDto } from './dto';
 import * as xlsx from 'xlsx';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from 'src/auth/schema';
@@ -11,12 +11,14 @@ import { ConfigService } from '@nestjs/config';
 var parseMessage = require('gmail-api-parse-message');
 var Batchelor = require('batchelor');
 import Handlebars from 'handlebars';
+import { Website } from 'src/website/schema';
 @Injectable()
 export class ContactService {
     constructor(
         @InjectModel(Contact.name) private contactModel: Model<Contact>,
         @InjectModel(User.name) private userModel: Model<User>,
         @InjectModel(Connection.name) private connectionModel: Model<Connection>,
+        @InjectModel(Website.name) private websiteModel: Model<Website>,
         private config: ConfigService) {
     }
 
@@ -48,6 +50,30 @@ export class ContactService {
         return contacts;
 
     }
+
+    async addContact(code:string, contactDto:ContactDto){
+        const connection=  await this.websiteModel.findOne({code:code}).exec();
+        if(!connection){
+            throw new NotFoundException("Connection Not found");
+        }
+        try{            
+            await this.contactModel.create({
+                email: contactDto.email,
+                fullname: contactDto.fullname,
+                phone: contactDto.phone,
+                companyname: contactDto.companyname,
+                jobtitle: contactDto.jobtitle,
+                company: connection.company
+            });
+        }
+        catch(error){
+            if (error.code === 11000) {
+                // Handle duplicate key error (E11000)
+                throw new ConflictException('Contact already exists');
+            }
+        }
+    }
+
     async connectGmail(user: ReqUser, connectionDto: ConnectGmailDto) {
         try {
             const oAuth2Client = new google.auth.OAuth2(

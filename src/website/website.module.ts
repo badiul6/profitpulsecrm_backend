@@ -13,6 +13,7 @@ import { Website, WebsiteSchema } from './schema';
     MongooseModule.forFeature([
       {name: Website.name, schema: WebsiteSchema}
     ]),
-  ]
+  ],
+  exports: [MongooseModule]
 })
 export class WebsiteModule {}
