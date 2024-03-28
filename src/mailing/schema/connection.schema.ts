@@ -2,10 +2,10 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
 import { User } from 'src/auth/schema';
 
-export type ConnectionDocument = HydratedDocument<Connection>;
+export type GmailDocument = HydratedDocument<Gmail>;
 
 @Schema()
-export class Connection {
+export class Gmail {
   @Prop({required:true})
   refresh_token: string;
 
@@ -13,4 +13,4 @@ export class Connection {
   user: User;
   
 }
-export const ConnectionSchema = SchemaFactory.createForClass(Connection);
+export const GmailSchema = SchemaFactory.createForClass(Gmail);

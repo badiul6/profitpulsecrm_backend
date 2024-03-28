@@ -1,10 +1,10 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { GetUser, Roles } from 'src/auth/decorator';
 import { AuthenticatedGuard, RolesGuard } from 'src/auth/guard';
 import { Role } from 'src/auth/schema';
 import { ContactService } from './contact.service';
 import { ReqUser } from 'src/auth/dto';
-import { ConnectGmailDto, ContactDto, ContactFileDto, MarketingEmailsDto } from './dto';
+import { ContactDto, ContactFileDto } from './dto';
 import { FormDataRequest } from 'nestjs-form-data';
 
 @Controller('contact')
@@ -29,23 +29,4 @@ export class ContactController {
     addContact(@Param('code') code:string, @Body() contactDto: ContactDto){
         return this.contactService.addContact(code, contactDto);     
     }
-
-    @Post('connect-gmail')
-    @UseGuards(AuthenticatedGuard)
-    connectGmail(@GetUser() user: ReqUser, @Body() connectionDto: ConnectGmailDto){
-        return this.contactService.connectGmail(user, connectionDto);
-    }
-    @Get('get-messages')
-    @UseGuards(AuthenticatedGuard)
-    getGmailMessages(@GetUser() user: ReqUser){
-        return this.contactService.getEmailMessages(user);
-    }
-
-    @Post('send-marketing-emails')
-    @UseGuards(AuthenticatedGuard, RolesGuard)
-    @Roles(Role.MAGENT)
-    sendEmails(@GetUser() user: ReqUser, @Body() emailDto: MarketingEmailsDto){
-        return this.contactService.sendMarketingEmails(user, emailDto);
-    }
-    
 }
