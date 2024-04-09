@@ -1,9 +1,12 @@
-import { IsDecimal, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from "class-validator";
+import { IsDecimal, IsNotEmpty, IsOptional} from "class-validator";
 
-export class ProductDto{
+export class UpdateProductDto{
 
     @IsNotEmpty()
     name: string
+
+    @IsNotEmpty()
+    new_name: string
 
     @IsOptional()
     description: string

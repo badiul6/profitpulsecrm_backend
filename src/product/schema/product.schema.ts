@@ -6,7 +6,8 @@ export type ProductDocument = HydratedDocument<Product>;
 
 @Schema({timestamps:true})
 export class Product {
-    @Prop({required:true, unique:true})
+
+    @Prop({required:true})
     name:string
 
     @Prop()
@@ -24,3 +25,4 @@ export class Product {
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);
+ProductSchema.index({ name: 1, company: 1 }, { unique: true });

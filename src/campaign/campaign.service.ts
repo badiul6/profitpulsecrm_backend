@@ -107,7 +107,6 @@ export class CampaignService {
                 _id:0,
                 name:1,
                 totalEmailsSent:1,
-                impression: 1,
                 clicks:1,
             }
 
