@@ -67,4 +67,24 @@ export class ContactService {
         }
     }
 
+    async createContact(user: ReqUser, contactDto: ContactDto){
+        const userinDb=  await this.userModel.findById(user.id).exec();
+        try{            
+            await this.contactModel.create({
+                email: contactDto.email,
+                fullname: contactDto.fullname,
+                phone: contactDto.phone,
+                companyname: contactDto.companyname,
+                jobtitle: contactDto.jobtitle,
+                company: userinDb.company
+            });
+            return;
+        }
+        catch(error){
+            if (error.code === 11000) {
+                throw new ConflictException('Contact already exists');
+            }
+        }
+    }
+
 }

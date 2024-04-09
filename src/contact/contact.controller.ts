@@ -29,4 +29,9 @@ export class ContactController {
     addContact(@Param('code') code:string, @Body() contactDto: ContactDto){
         return this.contactService.addContact(code, contactDto);     
     }
+
+    @Post('create')
+    createContact(@GetUser() user:ReqUser, @Body() contactDto: ContactDto){
+        return this.contactService.createContact(user, contactDto);     
+    }
 }
