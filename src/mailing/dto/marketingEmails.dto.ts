@@ -1,4 +1,4 @@
-import { IsArray, IsEmail, IsNotEmpty, IsString } from "class-validator";
+import { IsArray, IsEmail, IsNotEmpty, IsString, IsUrl } from "class-validator";
 
 export class MarketingEmailsDto{
     @IsNotEmpty()
@@ -13,4 +13,10 @@ export class MarketingEmailsDto{
     @IsNotEmpty()
     @IsString()
     subject:string
+
+    @IsNotEmpty()
+    campaign_name:string
+
+    @IsUrl()
+    url:string
 }

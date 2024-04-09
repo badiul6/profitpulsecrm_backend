@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from 'src/auth/schema';
@@ -9,6 +9,7 @@ import { ConnectGmailDto, MarketingEmailsDto } from './dto';
 import { ReqUser } from 'src/auth/dto';
 import { google } from 'googleapis';
 import Handlebars from 'handlebars';
+import { Campaign } from 'src/campaign/schema';
 var Batchelor = require('batchelor');
 var parseMessage = require('gmail-api-parse-message');
 
@@ -19,6 +20,7 @@ export class MailingService {
         @InjectModel(Contact.name) private contactModel: Model<Contact>,
         @InjectModel(User.name) private userModel: Model<User>,
         @InjectModel(Gmail.name) private gmailModel: Model<Gmail>,
+        @InjectModel(Campaign.name) private campaignModel: Model<Campaign>,
         private config: ConfigService
     ){}
     
@@ -43,6 +45,13 @@ export class MailingService {
         catch (error) {
             console.log(error)
             throw new UnauthorizedException();
+        }
+    }
+
+    async disconnectGmail(user:ReqUser){
+        const gmailConnection = await this.gmailModel.findOneAndDelete({ user:user.id }).exec();
+        if (gmailConnection == null) {
+            throw new NotFoundException('Connection Not Found');
         }
     }
 
@@ -127,16 +136,22 @@ export class MailingService {
 
     }
     async sendMarketingEmails(user: ReqUser, emailDto: MarketingEmailsDto) {
+        const userinDB = await this.userModel.findById(user.id).exec();
+        if (!userinDB) {
+            throw new NotFoundException('User Not Found')
+        }
+
+        const campaign= await this.campaignModel.findOne({name:emailDto.campaign_name}).exec();
+        if(!campaign || userinDB.company.toString()!=campaign.company.toString()){
+            throw new NotFoundException('No campaign found with this name');
+        }
+ 
         const connection = await this.gmailModel.findOne({
             user: user.id
         }).exec();
 
         if (!connection) {
             throw new NotFoundException('Connection to gmail Not Found');
-        }
-        const userinDB = await this.userModel.findById(user.id).exec();
-        if (!userinDB) {
-            throw new NotFoundException('User Not Found')
         }
 
         try {
@@ -150,6 +165,7 @@ export class MailingService {
                 version: 'v1',
                 auth: oAuth2Client
             });
+
             const emailAddress=(await gmail.users.getProfile({userId:'me'})).data.emailAddress;
 
             const userDetails = await this.contactModel.find({ company: userinDB.company, email: { $in: emailDto.mailing_list } }, 'fullname email').exec();
@@ -160,8 +176,7 @@ export class MailingService {
 
             for (var i = 0; i < emailDto.mailing_list.length; i++) {
 
-                const html = template({ name: userDetails[i].fullname });
-
+                const html = template({ name: userDetails[i].fullname, trackinglink:`http://localhost:3333/campaign/click?campaign=${campaign.id}&url=${emailDto.url}&email=${userDetails[i].email}`});
                 const raw = [
                     `From: ${userinDB.fullname}< ${emailAddress}>`,
                     `To: ${userDetails[i].email}`,
@@ -171,17 +186,23 @@ export class MailingService {
                     '',
                     html,
                 ].join('\n');
-                gmail.users.messages.send({
+                await gmail.users.messages.send({
                     userId: 'me',
                     requestBody: {
                         raw: Buffer.from(raw).toString('base64')
                     }
                 });
             }
+            campaign.totalEmailsSent += emailDto.mailing_list.length;
+            await campaign.save();  
         }
         catch (error) {
-            throw new NotFoundException()
+            if(error.response.status==400 && error.response.data.error_description.toString()=='Token has been expired or revoked.'){
+                throw new BadRequestException('Reconnect Gmail')
         }
+        throw new NotFoundException();
+    }
+
     }
 
 }
