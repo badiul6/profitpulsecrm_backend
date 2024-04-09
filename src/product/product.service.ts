@@ -1,11 +1,10 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { ReqUser } from 'src/auth/dto';
-import { ProductDto } from './dto';
+import { ProductDto, UpdateProductDto } from './dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Product } from './schema';
 import { Model } from 'mongoose';
 import { User } from 'src/auth/schema';
-import { UpdateProductDto } from './dto/updateProduct.dto';
 
 @Injectable()
 export class ProductService {

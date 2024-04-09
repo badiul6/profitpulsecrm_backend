@@ -4,8 +4,7 @@ import { AuthenticatedGuard, RolesGuard } from 'src/auth/guard';
 import { Role } from 'src/auth/schema';
 import { ProductService } from './product.service';
 import { ReqUser } from 'src/auth/dto';
-import { ProductDto } from './dto';
-import { UpdateProductDto } from './dto/updateProduct.dto';
+import { ProductDto, UpdateProductDto } from './dto';
 
 @Controller('product')
 export class ProductController {
