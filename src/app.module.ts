@@ -5,17 +5,17 @@
   import { MongooseModule } from '@nestjs/mongoose';
 import { ContactModule } from './contact/contact.module';
 import { NestjsFormDataModule } from 'nestjs-form-data';
-import { MailerModule } from '@nestjs-modules/mailer';
 import { TemplateModule } from './template/template.module';
 import { WebsiteModule } from './website/website.module';
 import { MailingModule } from './mailing/mailing.module';
+import { CampaignModule } from './campaign/campaign.module';
+import { DealModule } from './deal/deal.module';
+import { ProductModule } from './product/product.module';
 
   @Module({
     imports: [
       NestjsFormDataModule.config({isGlobal:true}),
-      ConfigModule.forRoot({
-        isGlobal: true
-      }),
+      ConfigModule.forRoot({isGlobal: true}),
       MongooseModule.forRootAsync({
         imports: [ConfigModule],
         useFactory: async (configService: ConfigService) => ({
@@ -28,6 +28,9 @@ import { MailingModule } from './mailing/mailing.module';
       ContactModule,
       TemplateModule,
       WebsiteModule,
-      MailingModule],
+      MailingModule,
+      CampaignModule,
+      DealModule,
+      ProductModule],
        })
   export class AppModule {}
