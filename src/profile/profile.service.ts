@@ -95,7 +95,11 @@ export class ProfileService {
                 throw new NotFoundException();
             }
         } catch (error) {
-            throw error;
+            if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
+                throw new ConflictException('Email already in use');
+            } else {
+                throw error;
+            }
         }
 
     }
