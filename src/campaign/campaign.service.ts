@@ -58,7 +58,6 @@ export class CampaignService {
             return { url: `https://${clickDto.url}` };
         }
         //lead
-        console.log(contact);
         await this.leadModel.create({
             contact:contact.id,
             campaign:campaign.id,

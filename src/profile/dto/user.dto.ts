@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty } from "class-validator"
+import { IsEmail, IsEnum, IsNotEmpty } from "class-validator"
 import { Role } from "src/auth/schema"
 
 export class UserDto{
@@ -9,6 +9,7 @@ export class UserDto{
     @IsNotEmpty()
     fullname: string
 
+    @IsEnum(Role)
     @IsNotEmpty()
     role: Role
 }

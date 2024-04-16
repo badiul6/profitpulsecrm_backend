@@ -13,6 +13,9 @@ import { AuthModule } from 'src/auth/auth.module';
       {name: Product.name, schema: ProductSchema},
     ]),
     AuthModule
+  ],
+  exports:[
+    MongooseModule
   ]
 })
 export class ProductModule {}
