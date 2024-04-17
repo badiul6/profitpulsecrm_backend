@@ -11,6 +11,7 @@ import { MailingModule } from './mailing/mailing.module';
 import { CampaignModule } from './campaign/campaign.module';
 import { DealModule } from './deal/deal.module';
 import { ProductModule } from './product/product.module';
+import { ListModule } from './list/list.module';
 
   @Module({
     imports: [
@@ -31,6 +32,7 @@ import { ProductModule } from './product/product.module';
       MailingModule,
       CampaignModule,
       DealModule,
-      ProductModule],
+      ProductModule,
+      ListModule],
        })
   export class AppModule {}

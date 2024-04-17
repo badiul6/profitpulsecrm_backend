@@ -23,6 +23,13 @@ export class DealController {
     getAgents(@GetUser() user:ReqUser){
         return this.dealService.getAgents(user);
     }
+
+    @Get('get')
+    @UseGuards(AuthenticatedGuard, RolesGuard)
+    @Roles(Role.SHEAD)
+    get(@GetUser() user:ReqUser){
+        return this.dealService.get(user);
+    }
     
     @Get('get-deals')
     @UseGuards(AuthenticatedGuard, RolesGuard)
@@ -44,12 +51,5 @@ export class DealController {
     dealCompleted(@GetUser() user: ReqUser, @Body() completedDealDto: CompletedDealDto){
         return this.dealService.dealCompleted(user, completedDealDto);
     }
-    // @Post('me')
-    // @UseGuards(AuthenticatedGuard)
-    // me(@GetUser() user:ReqUser){
-    //     return this.dealService.me(user);
-    // }
-
-
-
+    
 }

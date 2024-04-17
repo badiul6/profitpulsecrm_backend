@@ -71,6 +71,70 @@ export class DealService {
         }
     }
 
+    async get(user:ReqUser){
+        const userinDb= await this.userModel.findById(user.id).exec();
+
+        const deals = await this.dealModel.aggregate([
+            {
+                $lookup: {
+                    from: "users", // Name of the User collection
+                    localField: "user",
+                    foreignField: "_id",
+                    as: "user"
+                }
+            },
+            {
+                $lookup: {
+                    from: "contacts", // Name of the Contact collection
+                    localField: "contact",
+                    foreignField: "_id",
+                    as: "contact"
+                }
+            },
+            {
+                $match: {
+                    "user.company": userinDb.company
+                }
+            },
+            {
+                $unwind: "$user" // Unwind the user array to get individual user objects
+
+            },
+            {
+                $unwind: "$contact" // Unwind the contact array to get individual contact objects
+            },
+            {
+                $sort: {
+                    createdAt: -1 // Sort by createdAt field in descending order (newest first)
+                }
+            },  
+            {
+                $project: {
+                    _id:0,
+                    createdAt: 0, 
+                    updatedAt: 0,
+                    __v: 0,
+                    "user._id": 0,
+                    "user.password": 0,
+                    "user.roles": 0,
+                    "user.company": 0,
+                    "user.__v": 0,
+                    "contact._id": 0,
+                    "contact.company": 0,
+                    "contact.__v": 0,
+                }
+            }
+        ]).exec().catch(()=>{
+            throw new NotFoundException();
+        });
+        if(deals.length==0){
+            throw new NotFoundException();
+        }
+        return {
+            data: deals
+        };
+    }
+
     async getDeals(user:ReqUser){
         const deals= await this.dealModel.find({
             user: user.id

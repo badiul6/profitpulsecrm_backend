@@ -40,6 +40,9 @@ export class ContactService {
         const contacts = await this.contactModel.find({
             company: userinDB.company
         }).exec();
+        if(contacts.length==0){
+            throw new NotFoundException('No Contact Found')
+        }
         return contacts;
 
     }
