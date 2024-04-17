@@ -140,4 +140,30 @@ export class CampaignService {
                 data: leads.map(lead => lead.contact)
             };
     }
+
+    async deleteCampaign(user: ReqUser, dto: CampaignDto){
+        const userinDB=  await this.userModel.findById(user.id).exec();
+        const campaign= await this.campaignModel.findOne(
+            {
+                name: dto.name,
+                company: userinDB.company
+            }
+        ).exec().catch(()=>{throw new NotFoundException()});
+        if(!campaign){
+            throw new NotFoundException('Campaign not found with this name');
+        }
+        await this.leadModel.deleteMany({
+            campaign: campaign.id
+        }).exec().catch(()=>{
+            throw new NotFoundException();
+        });
+        await this.campaignModel.deleteOne({
+            _id: campaign.id
+        }).exec();
+
+        return;
+       
+
+
+    }
 }

@@ -3,7 +3,7 @@ import { DealService } from './deal.service';
 import { AuthenticatedGuard, RolesGuard } from 'src/auth/guard';
 import { Role } from 'src/auth/schema';
 import { GetUser, Roles } from 'src/auth/decorator';
-import { AddInteractionDto, CompletedDealDto, CreateDealDto } from './dto';
+import { AddInteractionDto, CancelledDealDto, CompletedDealDto, CreateDealDto } from './dto';
 import { ReqUser } from 'src/auth/dto';
 
 @Controller('deal')
@@ -50,6 +50,13 @@ export class DealController {
     @Roles(Role.SAGENT)
     dealCompleted(@GetUser() user: ReqUser, @Body() completedDealDto: CompletedDealDto){
         return this.dealService.dealCompleted(user, completedDealDto);
+    }
+
+    @Patch('cancelled')
+    @UseGuards(AuthenticatedGuard, RolesGuard)
+    @Roles(Role.SAGENT)
+    dealCancelled(@GetUser() user: ReqUser, @Body() dto: CancelledDealDto){
+        return this.dealService.dealCancelled(user, dto);
     }
     
 }

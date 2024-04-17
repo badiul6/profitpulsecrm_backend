@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, Redirect, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Query, Redirect, UseGuards } from '@nestjs/common';
 import { GetUser, Roles } from 'src/auth/decorator';
 import { ReqUser } from 'src/auth/dto';
 import { AuthenticatedGuard, RolesGuard } from 'src/auth/guard';
@@ -43,6 +43,13 @@ export class CampaignController {
     @Roles(Role.SHEAD)
     getAllLeads(@Query() campaignDto: CampaignDto, @GetUser() user:ReqUser){
         return this.campaignService.getAllLeads(campaignDto, user);
+    }
+
+    @Delete('delete')
+    @UseGuards(AuthenticatedGuard, RolesGuard)
+    @Roles(Role.MAGENT, Role.SHEAD)
+    deleteCampaign(@GetUser() user:ReqUser, @Query()dto:CampaignDto){
+        return this.campaignService.deleteCampaign(user, dto);
     }
 
 }

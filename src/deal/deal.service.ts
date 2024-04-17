@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { AddInteractionDto, CompletedDealDto, CreateDealDto } from './dto';
+import { AddInteractionDto, CancelledDealDto, CompletedDealDto, CreateDealDto } from './dto';
 import { Deal, Sale, Status } from './schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
@@ -228,11 +228,43 @@ export class DealService {
                 user:user.id
             }
         ).then(async () =>{
-            await this.dealModel.findOneAndDelete({
+            await this.dealModel.findOneAndUpdate(
+            {
                 user: user.id,
                 contact: contact.id
-            }).exec();
+            },
+            {
+               status: Status.COMPLETED 
+            }
+        ).exec();
         });
+    }
+
+    async dealCancelled(user:ReqUser, dto: CancelledDealDto){
+        const userinDb= await this.userModel.findById(user.id).exec();
+
+        const contact= await this.contactModel.findOne({
+            email: dto.contact_email,
+            company:userinDb.company
+        }).exec();
+        if(!contact){
+            throw new NotFoundException('Contact Not Found');
+        }
+        const deal=await this.dealModel.findOneAndUpdate(
+            {
+                user:user.id,
+                contact: contact.id
+            },
+            {
+                status: Status.CANCELLED
+            }
+        ).exec().catch(()=>{
+            throw new NotFoundException();
+        });
+        if(!deal){
+            throw new NotFoundException();
+        }
+        return;
 
     }
 
