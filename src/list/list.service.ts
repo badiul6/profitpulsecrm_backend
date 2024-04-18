@@ -56,9 +56,7 @@ export class ListService {
             .catch(()=>{
                 throw new NotFoundException()
             });
-            if(lists.length==0){
-                throw new NotFoundException();
-            }
+            
             return {
                 data: lists
             }
