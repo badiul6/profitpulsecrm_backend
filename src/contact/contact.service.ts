@@ -26,6 +26,7 @@ export class ContactService {
         //adding companyID to each contact
         for (const obj of contacts) {
             obj['company'] = userinDB.company;
+            obj['creater'] = userinDB.fullname;
         }
         try {
             //uploading contacts ignoring duplicates
@@ -39,7 +40,7 @@ export class ContactService {
         const userinDB = await this.userModel.findById(user.id);
         const contacts = await this.contactModel.find({
             company: userinDB.company
-        }).select('-_id -__v').exec();
+        }).select('-_id -__v -updatedAt -company').exec();
         return {
             data:contacts
         };
@@ -58,7 +59,8 @@ export class ContactService {
                 phone: contactDto.phone,
                 companyname: contactDto.companyname,
                 jobtitle: contactDto.jobtitle,
-                company: connection.company
+                company: connection.company,
+                creater: 'website'
             });
         }
         catch(error){
@@ -78,11 +80,13 @@ export class ContactService {
                 phone: contactDto.phone,
                 companyname: contactDto.companyname,
                 jobtitle: contactDto.jobtitle,
-                company: userinDb.company
+                company: userinDb.company,
+                creater:userinDb.fullname                
             });
             return;
         }
         catch(error){
+            console.log(error)
             if (error.code === 11000) {
                 throw new ConflictException('Contact already exists');
             }
