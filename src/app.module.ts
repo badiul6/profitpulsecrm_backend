@@ -12,6 +12,7 @@ import { CampaignModule } from './campaign/campaign.module';
 import { DealModule } from './deal/deal.module';
 import { ProductModule } from './product/product.module';
 import { ListModule } from './list/list.module';
+import { TicketModule } from './ticket/ticket.module';
 
   @Module({
     imports: [
@@ -33,6 +34,7 @@ import { ListModule } from './list/list.module';
       CampaignModule,
       DealModule,
       ProductModule,
-      ListModule],
+      ListModule,
+      TicketModule],
        })
   export class AppModule {}

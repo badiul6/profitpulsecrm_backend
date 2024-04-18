@@ -4,7 +4,7 @@ import { Company } from 'src/profile/schema';
 
 export type ListDocument = HydratedDocument<List>;
 
-@Schema()
+@Schema({timestamps:true})
 export class List {
 
     @Prop({required:true})
@@ -15,6 +15,9 @@ export class List {
 
     @Prop({type: mongoose.Schema.Types.ObjectId, ref: 'Company', required:true})
     company:Company
+
+    @Prop()
+    creater:string
 
 }
 

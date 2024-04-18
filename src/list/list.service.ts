@@ -19,7 +19,8 @@ export class ListService {
                     {
                         name: dto.name,
                         mailing_list: dto.mailing_list,
-                        company:userinDb.company
+                        company:userinDb.company,
+                        creater: userinDb.fullname
                     }
                 );
                 return;    
@@ -52,7 +53,7 @@ export class ListService {
             const userinDB= await this.userModel.findById(user.id).exec();
             const lists= await this.listModel.find({
                 company: userinDB.company
-            }).select('name mailing_list -_id').exec()
+            }).select('name mailing_list creater updatedAt -_id').sort({updatedAt: -1}).exec()
             .catch(()=>{
                 throw new NotFoundException()
             });
@@ -75,7 +76,7 @@ export class ListService {
                 {
                     new:true
                 }
-            ).select('name mailing_list -_id').exec()
+            ).select('name mailing_list creater -_id').exec()
             .catch(()=>{
                 throw new NotFoundException();
             });

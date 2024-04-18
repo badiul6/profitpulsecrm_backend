@@ -31,8 +31,7 @@ export class ContactController {
     }
 
     @Post('create')
-    @UseGuards(AuthenticatedGuard, RolesGuard)
-    @Roles(Role.MAGENT, Role.SAGENT)
+    @UseGuards(AuthenticatedGuard)
     createContact(@GetUser() user:ReqUser, @Body() contactDto: ContactDto){
         return this.contactService.createContact(user, contactDto);     
     }
