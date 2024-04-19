@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { ContactDto, ContactFileDto } from './dto';
+import { ContactDto, ContactFileDto, SearchContactDto } from './dto';
 import * as xlsx from 'xlsx';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from 'src/auth/schema';
@@ -92,5 +92,42 @@ export class ContactService {
             }
         }
     }
+    
+    async searchContact(user:ReqUser, dto:SearchContactDto){
+        const userinDb= await this.userModel.findById(user.id).exec();
+        const contact= await this.contactModel.findOne(
+            {
+                email:dto.email,
+                company:userinDb.company
+            }
+        ).select('fullname email phone companyname jobtitle -_id').exec();
+        if(!contact){
+            throw new NotFoundException('Contact with this email doesnot exists');
+        }
+        return contact;
+    }
 
+    async updateContact(user:ReqUser, dto:ContactDto){
+        const userinDb= await this.userModel.findById(user.id).exec();
+        const contact= await this.contactModel.findOneAndUpdate(
+            {
+                email:dto.email,
+                company:userinDb.company
+            },
+            {
+                fullname: dto.fullname,
+                phone:dto.phone,
+                companyname: dto.companyname,
+                jobtitle: dto.jobtitle
+            },
+            {
+                new:true
+            }
+        ).select('fullname email phone companyname jobtitle -_id').exec();
+        if(!contact){
+            throw new NotFoundException('Contact with this email doesnot exists');
+        }
+        return contact;
+    }
+    
 }

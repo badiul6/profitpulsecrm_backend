@@ -1,10 +1,10 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { GetUser, Roles } from 'src/auth/decorator';
 import { AuthenticatedGuard, RolesGuard } from 'src/auth/guard';
 import { Role } from 'src/auth/schema';
 import { ContactService } from './contact.service';
 import { ReqUser } from 'src/auth/dto';
-import { ContactDto, ContactFileDto } from './dto';
+import { ContactDto, ContactFileDto, SearchContactDto } from './dto';
 import { FormDataRequest } from 'nestjs-form-data';
 
 @Controller('contact')
@@ -20,7 +20,7 @@ export class ContactController {
     }
     @Get('get-all')
     @UseGuards(AuthenticatedGuard, RolesGuard)
-    @Roles(Role.SAGENT)
+    @Roles(Role.SAGENT, Role.MAGENT)
     getContacts(@GetUser() user: ReqUser){
         return this.contactService.getContacts(user);
     }
@@ -35,4 +35,17 @@ export class ContactController {
     createContact(@GetUser() user:ReqUser, @Body() contactDto: ContactDto){
         return this.contactService.createContact(user, contactDto);     
     }
+
+    @Patch('update')
+    @UseGuards(AuthenticatedGuard)
+    updateContact(@GetUser() user:ReqUser, @Body() contactDto: ContactDto){
+        return this.contactService.updateContact(user, contactDto);     
+    }
+
+    @Get('search')
+    @UseGuards(AuthenticatedGuard)
+    searchContact(@GetUser() user:ReqUser, @Query()dto: SearchContactDto){
+        return this.contactService.searchContact(user, dto);
+    }
+
 }

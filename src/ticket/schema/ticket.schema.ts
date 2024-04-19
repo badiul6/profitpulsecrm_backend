@@ -12,20 +12,23 @@ export enum TicketStatus {
 export type TicketDocument = HydratedDocument<Ticket>;
 
 @Schema({timestamps:true})
-export class Ticket {
+export class Ticket { 
     @Prop({required:true})
     status: TicketStatus
 
-    // @Prop({type: [String]})
-    // progress:string[]
+    @Prop({required:true})
+    issue:string
 
-    // @Prop({type: mongoose.Schema.Types.ObjectId, ref: 'User', required:true})
-    // user:User
+    @Prop({type: [String]})
+    progress:string[]
 
-    // @Prop({type: mongoose.Schema.Types.ObjectId, ref: 'Contact', required:true})
-    // contact:Contact
+    @Prop({type: mongoose.Schema.Types.ObjectId, ref: 'User', required:true})
+    user:User
 
-    @Prop({ unique: true })
+    @Prop({type: mongoose.Schema.Types.ObjectId, ref: 'Contact', required:true})
+    contact:Contact
+
+    @Prop({ unique: true, required:true})
     ticketNo: string;
 }
 export const TicketSchema = SchemaFactory.createForClass(Ticket);
