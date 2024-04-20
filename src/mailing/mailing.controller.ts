@@ -11,22 +11,20 @@ export class MailingController {
     constructor(private mailingService: MailingService){}
     
     @Post('connect-gmail')
-    @UseGuards(AuthenticatedGuard, RolesGuard)
-    @Roles(Role.MAGENT, Role.SAGENT)
+    @UseGuards(AuthenticatedGuard)
     connectGmail(@GetUser() user: ReqUser, @Body() connectionDto: ConnectGmailDto){
         return this.mailingService.connectGmail(user, connectionDto);
     }
 
     @Delete('disconnect')
-    @UseGuards(AuthenticatedGuard, RolesGuard)
-    @Roles(Role.MAGENT, Role.SAGENT)
-    disconnectwebsite(@GetUser() user:ReqUser){
+    @UseGuards(AuthenticatedGuard)
+    disconnectGmail(@GetUser() user:ReqUser){
         return this.mailingService.disconnectGmail(user);
     }
 
     @Get('get-messages')
     @UseGuards(AuthenticatedGuard, RolesGuard)
-    @Roles(Role.SAGENT)
+    @Roles(Role.SAGENT, Role.CSAGENT)
     getGmailMessages(@GetUser() user: ReqUser){
         return this.mailingService.getEmailMessages(user);
     }
