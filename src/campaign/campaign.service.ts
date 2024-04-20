@@ -128,14 +128,11 @@ export class CampaignService {
                 path: 'contact',
                 select: 'fullname email phone companyname jobtitle -_id'
             })
-            .select('-_id -campaign -createdAt -updatedAt -__v')
+            .select('-_id createdAt')
             .sort({ createdAt: -1 })
-            .exec().catch(()=>{
-                throw new NotFoundException();
-            });
-
+            .exec().catch(()=>{throw new NotFoundException()});
             return {
-                data: leads.map(lead => lead.contact)
+                data: leads
             };
     }
 
