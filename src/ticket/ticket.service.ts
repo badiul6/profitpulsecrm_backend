@@ -97,7 +97,14 @@ export class TicketService {
                     as: "user"
                 }
             },
-            
+            {
+                $lookup: {
+                    from: "contacts", // Name of the User collection
+                    localField: "contact",
+                    foreignField: "_id",
+                    as: "contact"
+                }
+            },
             {
                 $match: {
                     "user.company": userinDb.company
@@ -108,28 +115,117 @@ export class TicketService {
 
             },
             {
+                $unwind: "$contact" // Unwind the user array to get individual user objects
+
+            },
+            {
                 $sort: {
                     createdAt: -1 // Sort by createdAt field in descending order (newest first)
                 }
             },  
-            // {
-            //     $project: {
-            //         _id:0,
-            //         createdAt: 0, 
-            //         updatedAt: 0,
-            //         __v: 0,
-            //         "user._id": 0,
-            //         "user.password": 0,
-            //         "user.roles": 0,
-            //         "user.company": 0,
-            //         "user.__v": 0,
-            //         "contact._id": 0,
-            //         "contact.company": 0,
-            //         "contact.__v": 0,
-            //     }
-            // }
-        ]).exec()
-        return tickets
+            {
+                $project: {
+                    _id:0,
+                    createdAt: 0, 
+                    updatedAt: 0,
+                    __v: 0,
+                    "user._id": 0,
+                    "user.password": 0,
+                    "user.roles": 0,
+                    "user.company": 0,
+                    "user.__v": 0,
+                    "user.isVerified":0,
+                    "user.verificationlink":0,
+                    "contact._id": 0,
+                    "contact.company": 0,
+                    "contact.__v": 0,
+                    "contact.createdAt": 0,
+                    "contact.updatedAt": 0,
+                }
+            }
+        ]).exec().catch(()=>{throw new NotFoundException()});
+        return {
+            data: tickets
+        }
+    }
+    async get(user:ReqUser){
+        const tickets= await this.ticketModel.find({
+            user:user.id
+        }).populate(
+            {
+                path:'contact user',
+                select:'email fullname phone creater jobtitle companyname -_id'
+            },
+           
+        ).select('status issue progress ticketNo -_id')
+        .exec().catch(()=>{throw new NotFoundException()});
+
+        return {
+            data:tickets
+        }
+    }
+    async getForwarded(user:ReqUser){
+        const userinDb= await this.userModel.findById(user.id).exec();
+        const tickets = await this.ticketModel.aggregate([
+            {
+                $lookup: {
+                    from: "users", // Name of the User collection
+                    localField: "user",
+                    foreignField: "_id",
+                    as: "user"
+                }
+            },
+            {
+                $lookup: {
+                    from: "contacts", // Name of the User collection
+                    localField: "contact",
+                    foreignField: "_id",
+                    as: "contact"
+                }
+            },
+            {
+                $match: {
+                    "user.company": userinDb.company,
+                    status: TicketStatus.FORWARDED
+                }
+            },
+            {
+                $unwind: "$user" // Unwind the user array to get individual user objects
+
+            },
+            {
+                $unwind: "$contact" // Unwind the user array to get individual user objects
+
+            },
+            {
+                $sort: {
+                    updatedAt: -1 // Sort by createdAt field in descending order (newest first)
+                }
+            },  
+            {
+                $project: {
+                    _id:0,
+                    createdAt: 0, 
+                    updatedAt: 0,
+                    __v: 0,
+                    "user._id": 0,
+                    "user.password": 0,
+                    "user.roles": 0,
+                    "user.company": 0,
+                    "user.__v": 0,
+                    "user.isVerified":0,
+                    "user.verificationlink":0,
+                    "contact._id": 0,
+                    "contact.company": 0,
+                    "contact.__v": 0,
+                    "contact.createdAt": 0,
+                    "contact.updatedAt": 0,
+                }
+            }
+        ]).exec().catch(()=>{throw new NotFoundException()});
+        return {
+            data: tickets
+        }
     }
 
 }

@@ -37,10 +37,24 @@ export class TicketController {
         return this.ticketservice.updateStatus(dto);
     }
 
-    @Get('get')
+    @Get('get-all')
     @UseGuards(AuthenticatedGuard, RolesGuard)
     @Roles(Role.CSAGENT)
     getAll(@GetUser()user:ReqUser){
         return this.ticketservice.getAll(user);
+    }
+
+    @Get('get')
+    @UseGuards(AuthenticatedGuard, RolesGuard)
+    @Roles(Role.CSAGENT)
+    get(@GetUser()user:ReqUser){
+        return this.ticketservice.get(user);
+    }
+
+    @Get('get-forwarded')
+    @UseGuards(AuthenticatedGuard, RolesGuard)
+    @Roles(Role.SHEAD)
+    getForwarded(@GetUser()user:ReqUser){
+        return this.ticketservice.getForwarded(user);
     }
 }
