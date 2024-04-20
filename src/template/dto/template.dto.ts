@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsString } from "class-validator";
+import { IsNotEmpty, IsObject, IsString } from "class-validator";
+import { Data } from "../schema";
 
 export class TemplateDto{
     @IsNotEmpty()
@@ -7,5 +8,8 @@ export class TemplateDto{
 
     @IsNotEmpty()
     @IsString()
-    body: string
+    thumbnail: string
+    
+    @IsObject()
+    data:Data
 }

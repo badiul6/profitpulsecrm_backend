@@ -40,7 +40,7 @@ export class CampaignController {
 
     @Get('leads')
     @UseGuards(AuthenticatedGuard, RolesGuard)
-    @Roles(Role.SHEAD)
+    @Roles(Role.SHEAD, Role.MAGENT)
     getAllLeads(@Query() campaignDto: CampaignDto, @GetUser() user:ReqUser){
         return this.campaignService.getAllLeads(campaignDto, user);
     }
