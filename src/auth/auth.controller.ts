@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Post, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Post, Redirect, Request, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthDto, ReqUser } from './dto';
 import { LocalAuthGuard } from './guard';
@@ -64,5 +64,10 @@ export class AuthController {
       return this.authService.signout(user);
     }
 
+    @Get('/verify/:code')
+    @Redirect('',302)
+    verify(@Param('code') code:string) {
+      return this.authService.verify(code);
+    }
    
 }

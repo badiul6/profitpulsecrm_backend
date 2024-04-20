@@ -28,25 +28,33 @@ export class Ticket {
     @Prop({type: mongoose.Schema.Types.ObjectId, ref: 'Contact', required:true})
     contact:Contact
 
-    @Prop({ unique: true, required:true})
+    @Prop({ unique: true})
     ticketNo: string;
 }
 export const TicketSchema = SchemaFactory.createForClass(Ticket);
 
-TicketSchema.pre<TicketDocument>('save', async function (next) {
+
+  TicketSchema.pre<TicketDocument>('save', async function (next) {
+    // Check if the document is new or if the ticketNo is already set
+    if (!this.isNew || this.ticketNo) {
+        // If it's not a new document or ticketNo is already set, skip generating a new ticket number
+        return next();
+    }
+
     // Generate a unique ticket number
     const currentDate = new Date();
     const ticketNo = `TICKET-${currentDate.getTime()}-${Math.floor(Math.random() * 1000)}`;
-    
+
     // Check if the generated ticket number already exists
     const existingTicket = await this.model('Ticket').findOne({ ticketNo });
     if (existingTicket) {
-      // If the generated ticket number already exists, regenerate it
-      return next(new Error('Ticket number already exists. Please try again.'));
+        // If the generated ticket number already exists, regenerate it
+        return next(new Error('Ticket number already exists. Please try again.'));
     }
-    
+
     // Set the generated ticket number
     this.ticketNo = ticketNo;
-  
+
     next();
-  });
+});
+

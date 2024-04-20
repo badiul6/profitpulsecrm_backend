@@ -1,34 +1,60 @@
-import { ConflictException, ForbiddenException, Injectable } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { AuthDto, ReqUser } from './dto';
 import * as argon from 'argon2';
 import { User } from './schema';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Connection, Model } from 'mongoose';
 const MongoStore= require('connect-mongo');
+import { v4 as uuidv4 } from 'uuid';
+import { MailerService } from '@nestjs-modules/mailer';
+import { ConfigService } from '@nestjs/config';
 
 
 @Injectable()
 export class AuthService {
-    constructor(@InjectModel(User.name) private userModel: Model<User>,@InjectConnection() private connection: Connection){ }
+    constructor(
+        @InjectModel(User.name) private userModel: Model<User>,
+        @InjectConnection() private connection: Connection,
+        private mailerService: MailerService,
+        private configService: ConfigService
+    ){}
 
     async signup(dto: AuthDto) {
-        try {
-            const hash = await argon.hash(dto.password);
-            dto.password= hash;
-            const user= new this.userModel(dto);
-            await user.save();
+        var isUnique: boolean = true;
+        while (isUnique) {
+            const code = uuidv4();
+            try {
+                const hash = await argon.hash(dto.password);
+                dto.password= hash;
+                dto['verificationlink']= code;
+                dto['isVerified']= false;
+                const user= new this.userModel(dto);
+                await user.save();
+                isUnique = false;
+                this.mailerService.sendMail({
+                    to:dto.email,
+                    from: `ProfitPulse CRM<${this.configService.get('USER')}>`,
+                    subject: 'ProfitPulse CRM - Email Verification',
+                   template: 'verification',
+                   context:{
+                    fullname: dto.fullname,
+                    url: `http://localhost:3333/auth/verify/${user.verificationlink}`
+                   }
+                });
 
-            return{
-                message: "User created successfully",
-                fullname: user.fullname,
-                email: user.email
-            };
-        }
-        catch (error) {
-            if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
-                throw new ConflictException('Email already in use');
-            } else {
-                throw error;
+                return{
+                    message: "User created successfully",
+                    fullname: user.fullname,
+                    email: user.email
+                };
+            }
+            catch (error) {
+                isUnique= false;
+                if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
+                    throw new ConflictException('Email already in use');
+                } else if(error.code === 11000 && error.keyPattern && error.keyPattern.verificationlink) {
+                    isUnique=true;
+                }
             }
         }
     }
@@ -64,14 +90,29 @@ export class AuthService {
         if(userinDb.company=== undefined){
             complete= false;
         }
+        if(userinDb.isVerified==false){
+            throw new UnprocessableEntityException('User not verified');
+        }
         return {
             message: 'User logged in',
             isCompleted: complete,
-            roles: user.roles
+            roles: user.roles,
         };
     }
     signout(user:any){
         user.session.destroy();
         return { msg: 'The user session has ended' }
+    }
+
+    async verify(code:string){
+        const user= await this.userModel.findOneAndUpdate(
+            { verificationlink:code },
+            { isVerified:true },
+            {new:true}
+        ).exec();
+        if(!user){
+            return {url:'https://localhost:5174/verify-account/failure'};
+        }
+        return {url:'https://localhost:5174/verify-account/success'}
     }
 }

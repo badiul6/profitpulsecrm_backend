@@ -5,21 +5,25 @@ import * as session from 'express-session';
 import * as passport from 'passport';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth/auth.service';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
-
   const app = await NestFactory.create(AppModule);
 
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+    }),
+  );
 
   const configService = app.get<ConfigService>(ConfigService);
-  const sessionService= app.get<AuthService>(AuthService);
-  app.use((req, res, next)=>{
+  const sessionService = app.get<AuthService>(AuthService);
+  app.use((req, res, next) => {
     res.header('Access-Control-Allow-Credentials', true);
-    res.header('Access-Control-Allow-Methods',
-    'GET,PUT,POST,DELETE,UPDATE,OPTIONS',);
+    res.header(
+      'Access-Control-Allow-Methods',
+      'GET,PUT,POST,DELETE,UPDATE,OPTIONS',
+    );
     res.header(
       'Access-Control-Allow-Headers',
       'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept',
@@ -29,31 +33,35 @@ async function bootstrap() {
     });
     next();
   });
-  app.use(session({
-    secret: configService.get('SECRET_KEY'),
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    },
-    store: sessionService.sessionStore()
-    
-  }));
+  app.use(
+    session({
+      secret: configService.get('SECRET_KEY'),
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      },
+      store: sessionService.sessionStore(),
+    }),
+  );
 
- 
+  const config = new DocumentBuilder()
+    .setTitle('ProfitPulse API')
+    .setDescription('API description')
+    .setVersion('1.0')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('apis', app, document);
+
   app.use(passport.initialize());
   app.use(passport.session());
   // Enable CORS
   app.enableCors({
     origin: (origin, callback) => {
-      if (!origin || origin.startsWith('http://localhost')) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
+      callback(null, true);
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PATCH'],
+    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization', 'set-cookie'],
   });
 
@@ -67,9 +75,6 @@ async function bootstrap() {
     next();
   });
 
-
-
   await app.listen(3333);
-  
 }
 bootstrap();

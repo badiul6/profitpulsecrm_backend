@@ -70,7 +70,7 @@ export class ProfileService {
             email: userdto.email,
             password: hash,
             roles: role,
-            company: owner.company
+            company: owner.company,
         };
         try {
             //create new user

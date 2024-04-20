@@ -29,6 +29,12 @@ export class User {
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Company'})
   company: Company;
+  
+  @Prop({unique:true})
+  verificationlink:string
+
+  @Prop({default: true})
+  isVerified:boolean
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

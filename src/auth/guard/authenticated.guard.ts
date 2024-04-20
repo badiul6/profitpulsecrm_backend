@@ -1,9 +1,11 @@
-import { CanActivate, ExecutionContext, HttpException, HttpStatus, Injectable } from "@nestjs/common"
+import { CanActivate, ExecutionContext, HttpException, HttpStatus, Injectable, UnprocessableEntityException } from "@nestjs/common"
 import { AuthService } from "../auth.service";
+import { UnsubscriptionError } from "rxjs";
 
 @Injectable()
 export class AuthenticatedGuard implements CanActivate {
   constructor(private authService: AuthService) {}
+  
   async canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
     if(!request.isAuthenticated()){
@@ -13,6 +15,10 @@ export class AuthenticatedGuard implements CanActivate {
     if (!userinDb) {
       return false;
     }
+    if(userinDb.isVerified==false){
+      throw new UnprocessableEntityException('User not verified');
+    }
+    
     if ((userinDb.company === undefined && request.route.path == '/profile/complete') || userinDb.company) {
       return request.isAuthenticated();
     } else {
@@ -20,4 +26,5 @@ export class AuthenticatedGuard implements CanActivate {
     }
     
   }
+  
 }
