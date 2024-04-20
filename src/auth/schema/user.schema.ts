@@ -30,7 +30,7 @@ export class User {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Company'})
   company: Company;
   
-  @Prop({unique:true})
+  @Prop()
   verificationlink:string
 
   @Prop({default: true})
@@ -38,3 +38,4 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+UserSchema.index({ verificationlink: 1 }, { unique: true, partialFilterExpression: { verificationlink: { $exists: true } } });

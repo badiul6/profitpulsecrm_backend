@@ -31,7 +31,7 @@ export class AuthService {
                 const user= new this.userModel(dto);
                 await user.save();
                 isUnique = false;
-                this.mailerService.sendMail({
+                await this.mailerService.sendMail({
                     to:dto.email,
                     from: `ProfitPulse CRM<${this.configService.get('USER')}>`,
                     subject: 'ProfitPulse CRM - Email Verification',
