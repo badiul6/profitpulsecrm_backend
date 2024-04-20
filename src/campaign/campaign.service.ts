@@ -109,10 +109,8 @@ export class CampaignService {
                 clicks:1,
             }
 
-        ).exec();
-        if(campaigns.length==0){
-            throw new NotFoundException('No Campaign found');
-        }
+        ).exec().catch(()=>{throw new NotFoundException()});
+        
         return {
             campaigns: campaigns
         }
