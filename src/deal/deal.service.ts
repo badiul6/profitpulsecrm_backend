@@ -198,7 +198,7 @@ export class DealService {
             company: userinDb.company, 
             name: { $in: productNames }, 
           }).exec().catch(()=>{throw new NotFoundException();});
-          if(products.length==0){throw new NotFoundException();}
+          if(products.length==0){throw new NotFoundException('Products not found');}
     
         dto.products.forEach(async dtoProduct =>{
             const p=  products.find(product=> product.name==dtoProduct.name);
