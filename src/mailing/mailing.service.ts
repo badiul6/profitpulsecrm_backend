@@ -1,11 +1,11 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotAcceptableException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from 'src/auth/schema';
 import { Contact } from 'src/contact/schema';
 import { Gmail } from './schema';
 import { ConfigService } from '@nestjs/config';
-import { ConnectGmailDto, MarketingEmailsDto } from './dto';
+import { ConnectGmailDto, InReplyToDto, MarketingEmailsDto, ReadMsgDto, SendEmailDto } from './dto';
 import { ReqUser } from 'src/auth/dto';
 import { google } from 'googleapis';
 import Handlebars from 'handlebars';
@@ -79,7 +79,9 @@ export class MailingService {
 
             const res = await gmail.users.messages.list({ userId: 'me', maxResults: 50 });
             const msgs = res.data.messages;
-
+            if(!msgs){
+                return {};
+            }
             const at = await oAuth2Client.getAccessToken();
 
             var batch = new Batchelor({
@@ -131,6 +133,7 @@ export class MailingService {
             return response;
         }
         catch (error) {
+            console.log(error)
             throw new NotFoundException();
         }
 
@@ -189,7 +192,8 @@ export class MailingService {
                 await gmail.users.messages.send({
                     userId: 'me',
                     requestBody: {
-                        raw: Buffer.from(raw).toString('base64')
+                        raw: Buffer.from(raw).toString('base64'),
+                        
                     }
                 });
             }
@@ -203,6 +207,155 @@ export class MailingService {
         throw new NotFoundException();
     }
 
+    }
+
+    async sendMessage(user:ReqUser, dto:SendEmailDto){
+        const userinDB = await this.userModel.findById(user.id).exec();
+        const connection = await this.gmailModel.findOne({
+            user: user.id
+        }).exec();
+
+        if (!connection) {
+            throw new NotFoundException('Connection to gmail Not Found');
+        }
+        try{
+            const oAuth2Client = new google.auth.OAuth2(
+                this.config.get('ClIENT_ID'),
+                this.config.get('CLIENT_SECRET'),
+                this.config.get('REDIRECT_URI'));
+
+            oAuth2Client.setCredentials({ refresh_token: connection.refresh_token });
+            const gmail = google.gmail({
+                version: 'v1',
+                auth: oAuth2Client
+            });
+            
+            const emailAddress=(await gmail.users.getProfile({userId:'me'})).data.emailAddress;
+           
+            const raw = [
+                `From:${userinDB.fullname}<${emailAddress}>`,
+                `To:${dto.to}`,
+                `Subject:${dto.subject}`,
+                'Content-Type: text/html; charset=utf-8',
+                'MIME-Version: 1.0',
+                
+                '',
+                dto.body,
+            ];
+            if (dto.cc) {
+                raw.splice(3, 0, `Cc:${dto.cc}`);  // Inserts at index 3, adjust index based on where Cc should appear
+            }
+            
+            // Conditionally add 'Bcc' if provided
+            if (dto.bcc) {
+                const bccIndex = dto.cc ? 4 : 3; // Adjusts index based on whether Cc was added
+                raw.splice(bccIndex, 0, `Bcc:${dto.bcc}`);
+            }
+            const emailContent = raw.join('\n');
+
+            await gmail.users.messages.send({
+                userId: 'me',
+                requestBody: {
+                    raw: Buffer.from(emailContent).toString('base64url'),
+                }
+            });
+            return;
+        }
+        catch(error){
+            console.log(error.response.data)
+            throw new NotAcceptableException()
+        }
+    }
+
+    async inReplyTo(user:ReqUser, dto:InReplyToDto){
+        const userinDB = await this.userModel.findById(user.id).exec();
+        const connection = await this.gmailModel.findOne({
+            user: user.id
+        }).exec();
+
+        if (!connection) {
+            throw new NotFoundException('Connection to gmail Not Found');
+        }
+        try{
+            const oAuth2Client = new google.auth.OAuth2(
+                this.config.get('ClIENT_ID'),
+                this.config.get('CLIENT_SECRET'),
+                this.config.get('REDIRECT_URI'));
+
+            oAuth2Client.setCredentials({ refresh_token: connection.refresh_token });
+            const gmail = google.gmail({
+                version: 'v1',
+                auth: oAuth2Client
+            });
+            const response = await gmail.users.messages.get({
+                userId: 'me',
+                id: dto.thread_id,
+                format: 'metadata',
+                metadataHeaders: ['References', 'Message-ID']
+              });
+            const headers = response.data.payload.headers;
+
+            const messageIdHeader = headers.find(header => header.name === 'Message-ID'|| header.name=== 'Message-Id');
+            const emailAddress=(await gmail.users.getProfile({userId:'me'})).data.emailAddress;
+           
+            const raw = [
+                `From:${userinDB.fullname}<${emailAddress}>`,
+                `To:${dto.to}`,
+                `Subject:RE: ${dto.subject}`,
+                `In-Reply-To:${messageIdHeader.value}`,
+                `References:${messageIdHeader.value}`,
+                'Content-Type: text/html; charset=utf-8',
+                'MIME-Version: 1.0',
+                
+                '',
+                dto.body,
+            ].join('\n');
+            await gmail.users.messages.send({
+                userId: 'me',
+                requestBody: {
+                    raw: Buffer.from(raw).toString('base64url'),
+                    threadId: dto.thread_id,     
+                }
+            });
+            return;
+        }
+        catch(error){
+            throw new NotAcceptableException()
+        }
+    }
+
+    async read(user:ReqUser, dto:ReadMsgDto){
+        const connection = await this.gmailModel.findOne({
+            user: user.id
+        }).exec();
+
+        if (!connection) {
+            throw new NotFoundException('Connection to gmail Not Found');
+        }
+        try{
+            const oAuth2Client = new google.auth.OAuth2(
+                this.config.get('ClIENT_ID'),
+                this.config.get('CLIENT_SECRET'),
+                this.config.get('REDIRECT_URI'));
+
+            oAuth2Client.setCredentials({ refresh_token: connection.refresh_token });
+            const gmail = google.gmail({
+                version: 'v1',
+                auth: oAuth2Client
+            });
+           
+            await gmail.users.threads.modify({
+                userId: 'me',
+                id: dto.msg_id,
+                requestBody: {
+                    removeLabelIds: ['UNREAD']  // Command to remove the 'UNREAD' label from the message
+                }
+            });
+            return;
+        }
+        catch(error){
+            throw new NotFoundException();
+        }
     }
 
 }

@@ -1,9 +1,9 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, Redirect, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Redirect, Req, Res, UseGuards } from '@nestjs/common';
 import { MailingService } from './mailing.service';
 import { AuthenticatedGuard, RolesGuard } from 'src/auth/guard';
 import { GetUser, Roles } from 'src/auth/decorator';
 import { ReqUser } from 'src/auth/dto';
-import { ConnectGmailDto, MarketingEmailsDto } from './dto';
+import { ConnectGmailDto, InReplyToDto, MarketingEmailsDto, ReadMsgDto, SendEmailDto } from './dto';
 import { Role } from 'src/auth/schema';
 
 @Controller('mailing')
@@ -32,7 +32,25 @@ export class MailingController {
     @Post('send-marketing-emails')
     @UseGuards(AuthenticatedGuard, RolesGuard)
     @Roles(Role.MAGENT)
-    sendEmails(@GetUser() user: ReqUser, @Body() emailDto: MarketingEmailsDto){
+    sendMarketingEmails(@GetUser() user: ReqUser, @Body() emailDto: MarketingEmailsDto){
         return this.mailingService.sendMarketingEmails(user, emailDto);
-    }   
+    }
+
+    @Post('send-msg')
+    @UseGuards(AuthenticatedGuard)
+    sendMessage(@GetUser() user: ReqUser, @Body() dto: SendEmailDto){
+        return this.mailingService.sendMessage(user,dto);
+    }
+
+    @Post('send-reply')
+    @UseGuards(AuthenticatedGuard)
+    inReplyTo(@GetUser() user: ReqUser, @Body() dto: InReplyToDto){
+        return this.mailingService.inReplyTo(user,dto);
+    }
+
+    @Patch('read')
+    @UseGuards(AuthenticatedGuard)
+    read(@GetUser() user: ReqUser, @Body() dto: ReadMsgDto){
+        return this.mailingService.read(user, dto);
+    }
 }
