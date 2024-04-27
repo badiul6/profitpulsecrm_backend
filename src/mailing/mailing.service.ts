@@ -179,6 +179,9 @@ export class MailingService {
             const emailAddress=(await gmail.users.getProfile({userId:'me'})).data.emailAddress;
 
             const userDetails = await this.contactModel.find({ company: userinDB.company, email: { $in: emailDto.mailing_list } }, 'fullname email').exec();
+            if(userDetails.length==0){
+                throw new NotFoundException('No contact exists')
+            }
             const foundEmails = userDetails.map(user => user.email);
             emailDto.mailing_list = emailDto.mailing_list.filter(email => foundEmails.includes(email));
 
@@ -211,7 +214,7 @@ export class MailingService {
             if(error.response.status==400 && error.response.data.error_description.toString()=='Token has been expired or revoked.'){
                 throw new BadRequestException('Reconnect Gmail')
         }
-        throw new NotFoundException();
+        throw new NotFoundException(error.response.message)
     }
 
     }
