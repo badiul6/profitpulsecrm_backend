@@ -14,6 +14,7 @@ import { ProductModule } from './product/product.module';
 import { ListModule } from './list/list.module';
 import { TicketModule } from './ticket/ticket.module';
 import { FacebookModule } from './facebook/facebook.module';
+import { SaleModule } from './sale/sale.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { FacebookModule } from './facebook/facebook.module';
     ProductModule,
     ListModule,
     TicketModule,
-    FacebookModule],
+    FacebookModule,
+    SaleModule],
 })
-export class AppModule { }
+export class AppModule {}
