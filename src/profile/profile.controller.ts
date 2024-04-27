@@ -3,7 +3,7 @@ import { FormDataRequest } from 'nestjs-form-data';
 import { GetUser, Roles } from 'src/auth/decorator';
 import { ReqUser } from 'src/auth/dto';
 import { AuthenticatedGuard, RolesGuard } from 'src/auth/guard';
-import { CompanyDto, UpdatePasswordDto, UpdateUserDto, UserDto } from './dto';
+import { CompanyDto, ResetAgentPasswordDto, UpdatePasswordDto, UpdateUserDto, UserDto } from './dto';
 import { ProfileService } from './profile.service';
 import { Role } from 'src/auth/schema';
 
@@ -38,6 +38,12 @@ export class ProfileController {
     @UseGuards(AuthenticatedGuard)
     updatePassword(@GetUser() user: ReqUser, @Body() passwordDto: UpdatePasswordDto){
         return this.profileService.updatePassword(user, passwordDto);
+    }
+    @Patch('resetagentpassword')
+    @UseGuards(AuthenticatedGuard, RolesGuard)
+    @Roles(Role.OWNER)
+    resetAgentPassword(@Body() dto: ResetAgentPasswordDto){
+        return this.profileService.resetAgentPassword(dto);
     }
 
     @Get('viewusers')

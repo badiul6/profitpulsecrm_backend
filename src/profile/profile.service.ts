@@ -1,6 +1,6 @@
 import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ReqUser } from 'src/auth/dto';
-import { CompanyDto, UpdatePasswordDto, UpdateUserDto, UserDto } from './dto';
+import { CompanyDto, ResetAgentPasswordDto, UpdatePasswordDto, UpdateUserDto, UserDto } from './dto';
 import { ConfigService } from '@nestjs/config';
 import { Company } from './schema';
 import { Model } from 'mongoose';
@@ -114,6 +114,19 @@ export class ProfileService {
         await this.userModel.findByIdAndUpdate(user.id, {
             password: hash
         }, { new: true }).exec();
+    }
+
+    async resetAgentPassword(dto: ResetAgentPasswordDto) {
+        const userInDB = await this.userModel.findOne({email:dto.agent_email}).exec();
+        if(!userInDB){
+            throw new NotFoundException('No agent this email');
+        }
+        const hash = await argon.hash(this.config.get('USER_PASSWORD'));
+        userInDB.password= hash;
+        await userInDB.save().catch(()=>{
+            throw new NotFoundException();
+        });
+        return;
     }
 
     async viewUsers(user: ReqUser) {
