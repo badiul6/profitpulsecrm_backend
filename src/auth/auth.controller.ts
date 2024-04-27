@@ -1,6 +1,6 @@
 import { Body, Controller, Get, HttpCode, Param, Post, Redirect, Request, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthDto, ReqUser } from './dto';
+import { AuthDto, ForgotPasswordDto, ReqUser } from './dto';
 import { LocalAuthGuard } from './guard';
 import { GetUser } from './decorator';
 
@@ -69,5 +69,11 @@ export class AuthController {
     verify(@Param('code') code:string) {
       return this.authService.verify(code);
     }
+    
+    @Post('forgot-password')
+    forgotPassword(@Body() dto: ForgotPasswordDto){
+      return this.authService.forgotPassword(dto);
+    }
+
    
 }

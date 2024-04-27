@@ -1,7 +1,7 @@
-import { ConflictException, ForbiddenException, Injectable, UnprocessableEntityException } from '@nestjs/common';
-import { AuthDto, ReqUser } from './dto';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
+import { AuthDto, ForgotPasswordDto, ReqUser } from './dto';
 import * as argon from 'argon2';
-import { User } from './schema';
+import { Role, TemporaryPassword, User } from './schema';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Connection, Model } from 'mongoose';
 const MongoStore= require('connect-mongo');
@@ -14,6 +14,7 @@ import { ConfigService } from '@nestjs/config';
 export class AuthService {
     constructor(
         @InjectModel(User.name) private userModel: Model<User>,
+        @InjectModel(TemporaryPassword.name) private temppassModel: Model<TemporaryPassword>,
         @InjectConnection() private connection: Connection,
         private mailerService: MailerService,
         private configService: ConfigService
@@ -68,7 +69,14 @@ export class AuthService {
         const isCorrect= await argon.verify(user.password, password);
 
         if(!isCorrect){
-            throw new ForbiddenException("Password doesn't match");
+            const temppass= await this.temppassModel.findOne({user:user.id}).exec();
+            if(!temppass){
+                throw new ForbiddenException("Password doesn't match");
+            }
+            const isTempCorrect= await argon.verify(temppass.temporaryPassword, password);
+            if(!isTempCorrect){
+                throw new ForbiddenException("Password doesn't match");
+            }
         }
         return {
             id: user.id,
@@ -114,5 +122,41 @@ export class AuthService {
             return {url:'https://localhost:5174/verify-account/failure'};
         }
         return {url:'https://localhost:5174/verify-account/success'}
+    }
+
+    async forgotPassword(dto:ForgotPasswordDto){
+        const user= await this.userModel.findOne({email:dto.email});
+        if(!user){
+            throw new NotFoundException('No user exists with this email');
+        }
+        if(!user.roles.includes(Role.OWNER)){
+            throw new NotFoundException('Contact your company owner for password reset');
+        }
+        const code = uuidv4();
+        const hash = await argon.hash(code);
+
+        await this.temppassModel.create({
+            user: user.id,
+            temporaryPassword:hash,
+        }).then(async temp =>{
+            await this.mailerService.sendMail({
+                to:user.email,
+                from: `ProfitPulse CRM<${this.configService.get('USER')}>`,
+                subject: 'ProfitPulse CRM - Password Reset Request',
+               template: 'forgotpassword',
+               context:{
+                name: user.fullname,
+                password: code
+               }
+            });
+        })
+        .catch(error =>{
+            if (error.code === 11000) {
+                // Handle duplicate key error (E11000)
+                throw new ConflictException('Wait for 5 minutes to request another password reset');
+            }
+        });
+
+
     }
 }
