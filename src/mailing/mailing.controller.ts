@@ -53,4 +53,10 @@ export class MailingController {
     read(@GetUser() user: ReqUser, @Body() dto: ReadMsgDto){
         return this.mailingService.read(user, dto);
     }
+    @Get('get-connection')
+    @UseGuards(AuthenticatedGuard, RolesGuard)
+    @Roles(Role.MAGENT)
+    getConnection(@GetUser() user:ReqUser){
+        return this.mailingService.getConnection(user);
+    }
 }

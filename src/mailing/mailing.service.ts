@@ -54,6 +54,13 @@ export class MailingService {
             throw new NotFoundException('Connection Not Found');
         }
     }
+    async getConnection(user:ReqUser){
+        const gmailConnection = await this.gmailModel.findOne({ user:user.id }).exec();
+        if (gmailConnection == null) {
+            throw new NotFoundException('Connection Not Found');
+        }
+        return;
+    }
 
     async getEmailMessages(user: ReqUser) {
         const connection = await this.gmailModel.findOne({
@@ -67,7 +74,7 @@ export class MailingService {
 
         try {
             const oAuth2Client = new google.auth.OAuth2(
-                this.config.get('ClIENT_ID'),
+                this.config.get('CLIENT_ID'),
                 this.config.get('CLIENT_SECRET'),
                 this.config.get('REDIRECT_URI'));
 
