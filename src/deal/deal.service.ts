@@ -1,12 +1,14 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { AddInteractionDto, CancelledDealDto, CompletedDealDto, CreateDealDto } from './dto';
-import { Deal, Sale, Status } from './schema';
+import { AddInteractionDto, AssignAgentDto, CancelledDealDto, CompletedDealDto, CreateDealDto } from './dto';
+import { Deal, Status } from './schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Role, User } from 'src/auth/schema';
 import { ReqUser } from 'src/auth/dto';
 import { Contact } from 'src/contact/schema';
 import { Product } from 'src/product/schema';
+import { Campaign, Lead } from 'src/campaign/schema';
+import { Sale } from 'src/sale/schema';
 
 
 @Injectable()
@@ -16,7 +18,11 @@ export class DealService {
         @InjectModel(Deal.name) private dealModel: Model<Deal>,
         @InjectModel(Contact.name) private contactModel: Model<Contact>,
         @InjectModel(Product.name) private productModel: Model<Product>,
+        @InjectModel(Campaign.name) private campaignModel: Model<Campaign>,
+        @InjectModel(Lead.name) private leadModel: Model<Lead>,
         @InjectModel(Sale.name) private saleModel: Model<Sale>,
+
+
     ){}
 
     async create(createDto: CreateDealDto, user:ReqUser){
@@ -53,6 +59,57 @@ export class DealService {
         return;
 
     }
+    async assignAgent(dto:AssignAgentDto, user:ReqUser){
+        const userinDb= await this.userModel.findById(user.id).exec();
+        const agent= await this.userModel.findOne({
+            email:dto.agent_email,
+        }).exec().catch(error=>{console.log(error);});
+        
+        if(!agent){
+            throw new NotFoundException('Agent Doesnot Exist');
+        }
+        const campaign= await this.campaignModel.findOne({
+            name: dto.campaign_name,
+            company: userinDb.company
+        }).exec().catch(error=>{console.log(error);});
+        
+        if(!campaign){
+            throw new NotFoundException('Campaign Doesnot Exist');
+        }
+        const contact= await this.contactModel.findOne({
+            email: dto.contact_email,
+            company: userinDb.company
+        }).exec().catch(error=>{console.log(error);});
+        
+        if(!contact){
+            throw new NotFoundException('Contact Doesnot Exist');
+        }
+        await this.dealModel.create({
+            status: Status.CREATED,
+            user: agent.id,
+            contact: contact.id
+        })
+        .then(async ()=>{
+            this.leadModel.findOneAndDelete({
+                contact: contact.id,
+                campaign: campaign.id
+            })
+            .then(deletedLead => {
+                if (!deletedLead) {
+                    throw new NotFoundException('No lead found with the specified contact and campaign');
+                }
+            })
+            
+        })
+        .catch(error=>{
+            if (error.code === 11000) {
+                throw new ConflictException('Deal already created for this contact');
+            }
+            console.log(error);
+        });
+
+    }
+
     async getAgents(user:ReqUser){
         const userinDb= await this.userModel.findById(user.id).exec();
         const users= await this.userModel.find(
@@ -127,9 +184,6 @@ export class DealService {
         ]).exec().catch(()=>{
             throw new NotFoundException();
         });
-        if(deals.length==0){
-            throw new NotFoundException();
-        }
         return {
             data: deals
         };
@@ -160,7 +214,7 @@ export class DealService {
         const contact= await this.contactModel.findOne(
             {
                 email:addInteractionDto.contact_email,
-                company: userinDb.company
+                company: userinDb.company,
             }
         ).exec();
         if(!contact){
@@ -169,11 +223,12 @@ export class DealService {
         const deal= await this.dealModel.findOne(
             {
                 user: user.id,
-                contact: contact.id
+                contact: contact.id,
+                isActive:true
             }
         ).exec();
         if(!deal){
-            throw new NotFoundException('No deal Found');
+            throw new NotFoundException('No active deal of this contact assigned to you');
         }
         deal.status=Status.INPROGRESS;
         deal.interactions.push(addInteractionDto.interaction_msg)
@@ -204,7 +259,7 @@ export class DealService {
             const p=  products.find(product=> product.name==dtoProduct.name);
             p.quantity= p.quantity-dtoProduct.quantity;
 
-            dtoProduct['productId']= p.id;
+            dtoProduct['name']= p.name;
             dtoProduct['unit_price']= p.unit_price;
             const totalPrice= dtoProduct.quantity*p.unit_price;
             dtoProduct['total_price']= totalPrice;
@@ -231,10 +286,12 @@ export class DealService {
             await this.dealModel.findOneAndUpdate(
             {
                 user: user.id,
-                contact: contact.id
+                contact: contact.id,
+                isActive:true
             },
             {
-               status: Status.COMPLETED 
+               status: Status.COMPLETED,
+               isActive:false 
             }
         ).exec();
         });
@@ -253,10 +310,12 @@ export class DealService {
         const deal=await this.dealModel.findOneAndUpdate(
             {
                 user:user.id,
-                contact: contact.id
+                contact: contact.id,
+                isActive:true
             },
             {
-                status: Status.CANCELLED
+                status: Status.CANCELLED,
+                isActive:false
             }
         ).exec().catch(()=>{
             throw new NotFoundException();
@@ -268,6 +327,7 @@ export class DealService {
 
     }
 
+  
    
 
 }

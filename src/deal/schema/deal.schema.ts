@@ -27,8 +27,18 @@ export class Deal {
     //assignedAgent
     @Prop({type: mongoose.Schema.Types.ObjectId, ref: 'User', required:true})
     user: User
-
+    // Add a new computed field that is true if status is CREATED or INPROGRESS
+    @Prop({ type: Boolean, default: function() {
+      return [Status.CREATED, Status.INPROGRESS].includes(this.status);
+    }})
+    isActive: boolean;
 }
 
 export const DealSchema = SchemaFactory.createForClass(Deal);
-DealSchema.index({ contact: 1, user: 1 }, { unique: true });
+DealSchema.index(
+  { contact: 1, user: 1, isActive: 1 },
+  {
+      unique: true,
+      partialFilterExpression: { isActive: true }
+  }
+);
