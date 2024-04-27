@@ -1,0 +1,1 @@
+export * from './facebook.schema';
