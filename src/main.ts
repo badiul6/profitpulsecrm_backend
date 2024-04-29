@@ -6,6 +6,7 @@ import * as passport from 'passport';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth/auth.service';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { urlencoded, json } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -74,6 +75,9 @@ async function bootstrap() {
     });
     next();
   });
+
+  app.use(json({ limit: '50mb' }));
+  app.use(urlencoded({ extended: true, limit: '50mb' }));
 
   await app.listen(3333);
 }

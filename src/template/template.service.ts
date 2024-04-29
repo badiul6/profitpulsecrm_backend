@@ -50,7 +50,7 @@ export class TemplateService {
         try {
             const templates = await this.templateModel.find(
                 { company: userinDb.company },
-                { _id: 0, name: 1, thumbnail: 1 }
+                { _id: 0, name: 1, thumbnail: 1, updatedAt: 1 }
             ).sort({ updatedAt: -1 })
             .exec().catch(()=>{throw new NotFoundException()});
 

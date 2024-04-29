@@ -23,8 +23,7 @@ export class MailingController {
     }
 
     @Get('get-messages')
-    @UseGuards(AuthenticatedGuard, RolesGuard)
-    @Roles(Role.SAGENT, Role.CSAGENT)
+    @UseGuards(AuthenticatedGuard)
     getGmailMessages(@GetUser() user: ReqUser){
         return this.mailingService.getEmailMessages(user);
     }
