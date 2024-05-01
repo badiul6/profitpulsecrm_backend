@@ -19,8 +19,7 @@ export class ContactController {
         return this.contactService.importFile(user, fileDto);
     }
     @Get('get-all')
-    @UseGuards(AuthenticatedGuard, RolesGuard)
-    @Roles(Role.SAGENT, Role.MAGENT)
+    @UseGuards(AuthenticatedGuard)
     getContacts(@GetUser() user: ReqUser){
         return this.contactService.getContacts(user);
     }

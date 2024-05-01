@@ -101,10 +101,8 @@ export class FacebookService {
     async getConnection(user:ReqUser){
         const userinDb= await this.userModel.findById(user.id).exec();
         const fbConnection= await this.fbModel.findOne({company:userinDb.company}).exec();
-        if(!fbConnection){
-            throw new NotFoundException('Facebook connection not found')
-        }
-        return;
+        
+        return {connected: fbConnection !== null};
     }
    
 }
