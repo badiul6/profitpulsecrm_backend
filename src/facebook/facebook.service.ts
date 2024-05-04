@@ -20,6 +20,7 @@ const api = FacebookAdsApi.init(
   'EAAFtGqh0QloBO1JUhMTLZCAQi0qxGmSKE4AEO8bGFAm1XOWv3TwmgWVOCsUUIHc2FlJT6YHrHLc7HvGo39EJIu9gUpyHhFLu1OCKBEVwj28Baxng9EKuxmUtraZApcbBd7UKUiOijxCgZBAZBYs1lVBdj9IvWyTVPg75wjQ3YtZBZAv1bqtC42rPSS',
 );
 import { ConfigService } from '@nestjs/config';
+import * as moment from 'moment';
 @Injectable()
 export class FacebookService {
   constructor(
@@ -97,23 +98,17 @@ export class FacebookService {
       const dayWiseInsights = await campaign.getInsights(dayFields, dayParams);
 
       // Process the insights data to get clicks per day
-      const clicksPerDay = {};
-      const impressionsPerDay = {};
+      const clicksPerDay = [];
+      const impressionsPerDay = [];
 
       dayWiseInsights.forEach((insight) => {
-        const date = insight.date_start;
-        const clicks = insight.clicks;
-        const impressions = insight.impressions;
+        const date = moment(insight.date_start, 'YYYY-MM-DD').utc().unix(); // Convert date to Unix timestamp
+        const clicks = insight.clicks || 0; // Handle cases where clicks may be undefined
+        const impressions = insight.impressions || 0; // Handle cases where impressions may be undefined
 
-        if (!clicksPerDay[date]) {
-          clicksPerDay[date] = 0;
-        }
-        clicksPerDay[date] += clicks;
-
-        if (!impressionsPerDay[date]) {
-          impressionsPerDay[date] = 0;
-        }
-        impressionsPerDay[date] += impressions;
+        // Push data as an object to the arrays
+        clicksPerDay.push({ date, clicks });
+        impressionsPerDay.push({ date, impressions });
       });
 
       const totalFeilds = [
@@ -142,12 +137,10 @@ export class FacebookService {
         totalParams,
       );
 
-      console.log(totalInsights[0]._data);
-
       return {
-        overall_stats: totalInsights[0]._data || {},
-        day_wise_clicks: clicksPerDay || {},
-        day_wise_insights: impressionsPerDay || {},
+        overall_stats: totalInsights[0]._data || [],
+        day_wise_clicks: clicksPerDay || [],
+        day_wise_impressions: impressionsPerDay || {},
       };
     } catch (error) {
       console.log(error);

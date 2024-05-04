@@ -34,7 +34,7 @@ export class AuthService {
                 isUnique = false;
                 await this.mailerService.sendMail({
                     to:dto.email,
-                    from: `ProfitPulse CRM<${this.configService.get('USER')}>`,
+                    from: `ProfitPulse CRM<${this.configService.get('GMAIL_USER')}>`,
                     subject: 'ProfitPulse CRM - Email Verification',
                    template: 'verification',
                    context:{
@@ -141,7 +141,7 @@ export class AuthService {
         }).then(async temp =>{
             await this.mailerService.sendMail({
                 to:user.email,
-                from: `ProfitPulse CRM<${this.configService.get('USER')}>`,
+                from: `ProfitPulse CRM<${this.configService.get('GMAIL_USER')}>`,
                 subject: 'ProfitPulse CRM - Password Reset Request',
                template: 'forgotpassword',
                context:{
