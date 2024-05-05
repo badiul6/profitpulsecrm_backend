@@ -162,14 +162,13 @@ export class DealService {
             },
             {
                 $sort: {
-                    createdAt: -1 // Sort by createdAt field in descending order (newest first)
+                    updatedAt: -1 // Sort by createdAt field in descending order (newest first)
                 }
             },  
             {
                 $project: {
                     _id:0,
                     createdAt: 0, 
-                    updatedAt: 0,
                     __v: 0,
                     "user._id": 0,
                     "user.password": 0,
