@@ -19,7 +19,7 @@ export class ProductController {
 
     @Get('get')
     @UseGuards(AuthenticatedGuard, RolesGuard)
-    @Roles(Role.SHEAD, Role.SAGENT)
+    @Roles(Role.SHEAD, Role.SAGENT, Role.CSAGENT)
     get(@GetUser() user:ReqUser){
         return this.productService.get(user);
     }
