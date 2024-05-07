@@ -156,7 +156,8 @@ export class TicketService {
                 select:'email fullname phone creater jobtitle companyname -_id'
             },
            
-        ).select('status issue progress ticketNo -_id')
+        ).select('status issue progress ticketNo updatedAt -_id')
+        .sort({updatedAt: -1})
         .exec().catch(()=>{throw new NotFoundException()});
 
         return {
