@@ -120,9 +120,6 @@ export class DealService {
             .exec().catch(()=>{
                 throw new NotFoundException();
             });
-        if(users.length==0){
-            throw new NotFoundException('No Sales Agent');
-        }
         return {
             data: users
         }
