@@ -192,14 +192,12 @@ export class DealService {
             path: 'contact',
             select: 'fullname email phone companyname jobtitle -_id'
         })
-        .select('-_id -user -createdAt -updatedAt -__v')
-        .sort({ createdAt: -1 })
+        .select('-_id -user -createdAt -__v')
+        .sort({ updatedAt: -1 })
         .exec().catch(()=>{
             throw new NotFoundException();
         });
-        if (deals.length==0){
-            throw new NotFoundException('No deals associated to this agent');
-        }
+       
         return {
             data: deals
         }
