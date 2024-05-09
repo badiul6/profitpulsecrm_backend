@@ -164,4 +164,15 @@ export class ProfileService {
             throw new NotFoundException("User Not Found");
         }
     }
+
+    async viewProfile(user:ReqUser){
+        const userinDb= await this.userModel.findById(user.id).populate('company').exec();
+        return{
+            'logo': userinDb.company.logo,
+            'company_name': userinDb.company.name,
+            'user_name':userinDb.fullname,
+            'company_email': userinDb.company.email,
+            'role': userinDb.roles[0]
+        }
+    }
 }

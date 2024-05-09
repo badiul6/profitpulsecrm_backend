@@ -59,6 +59,14 @@ export class ProfileController {
     deleteUser(@Param('email') email:string, @GetUser() user:ReqUser){
         return this.profileService.deleteuser(email, user);
     }
+
+
+    @Get('viewprofile')
+    @UseGuards(AuthenticatedGuard)
+    viewProfile(@GetUser() user: ReqUser){
+        return this.profileService.viewProfile(user);
+    }
+    
     
     
 
