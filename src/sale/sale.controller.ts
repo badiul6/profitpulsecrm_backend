@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { FormDataRequest } from 'nestjs-form-data';
 import { GetUser, Roles } from 'src/auth/decorator';
-import { SaleDto, SalesFileDto } from './dto';
+import { AiChatDto, SaleDto, SalesFileDto } from './dto';
 import { ReqUser } from 'src/auth/dto';
 import { AuthenticatedGuard, RolesGuard } from 'src/auth/guard';
 import { Role } from 'src/auth/schema';
@@ -39,5 +39,12 @@ export class SaleController {
     @Roles(Role.SHEAD)
     getAll(@GetUser() user: ReqUser){
         return this.saleService.getAll(user);
+    }
+
+    @Get('aichat')
+    @UseGuards(AuthenticatedGuard, RolesGuard)
+    @Roles(Role.SAGENT)
+    aiChat(@GetUser() user: ReqUser, @Query() dto: AiChatDto){
+        return this.saleService.aiChat(user, dto);
     }
 }

@@ -2,11 +2,12 @@ import { Injectable, NotAcceptableException, NotFoundException } from '@nestjs/c
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Sale } from './schema';
-import { SaleDto, SalesFileDto } from './dto';
+import { AiChatDto, SaleDto, SalesFileDto } from './dto';
 import { ReqUser } from 'src/auth/dto';
 import { User } from 'src/auth/schema';
 import { Contact } from 'src/contact/schema';
 import { Product } from 'src/product/schema';
+import axios from 'axios';
 
 @Injectable()
 export class SaleService {
@@ -180,5 +181,73 @@ export class SaleService {
             data: sales
         }
         
+    }
+
+
+    async aiChat(user:ReqUser, dto:AiChatDto) {
+        const userinDB= await this.userModel.findById(user.id).exec();
+        const sales = await this.saleModel.aggregate([
+            {
+                $lookup: {
+                    from: "users", // Name of the User collection
+                    localField: "user",
+                    foreignField: "_id",
+                    as: "user"
+                }
+            },
+            {
+                $lookup: {
+                    from: "contacts", // Name of the Contact collection
+                    localField: "contact",
+                    foreignField: "_id",
+                    as: "contact"
+                }
+            },
+            {
+                $match: {
+                    "user.company": userinDB.company
+                }
+            },
+            {
+                $unwind: "$user" // Unwind the user array to get individual user objects
+
+            },
+            {
+                $unwind: {
+                    path: "$contact",
+                    preserveNullAndEmptyArrays: true // Keep documents even if the contact array is empty
+                }
+            },
+            {
+                $sort: {
+                    createdAt: -1 // Sort by createdAt field in descending order (newest first)
+                }
+            },  
+            {
+                $project: {
+                    _id:0,
+                   
+                    createdAt: 0, 
+                    updatedAt: 0,
+                    __v: 0,
+                    user:0,
+                    contact:0
+                    
+                }
+            }
+        ]).exec().catch(()=>{
+            throw new NotFoundException();
+        });
+
+        try {
+            const response = await axios.post('http://localhost:3000/sales_chat', {
+              query_str: dto.prompt,
+              sales: sales
+            });
+            return response.data;
+          } catch (error) {
+            console.error('Failed to send sales data', error);
+            throw new NotFoundException();
+          }
     }
 }
