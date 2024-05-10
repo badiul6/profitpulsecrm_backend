@@ -109,7 +109,7 @@ export class CampaignService {
                 clicks:1,
             }
 
-        ).exec().catch(()=>{throw new NotFoundException()});
+        ).sort({updatedAt:-1}).exec().catch(()=>{throw new NotFoundException()});
         
         return {
             campaigns: campaigns

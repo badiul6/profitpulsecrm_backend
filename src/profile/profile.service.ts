@@ -167,12 +167,27 @@ export class ProfileService {
 
     async viewProfile(user:ReqUser){
         const userinDb= await this.userModel.findById(user.id).populate('company').exec();
+
+        let userRole:string;
+        if(userinDb.roles[0]=="OWNER"){
+            userRole= 'OWNER';
+        }else if(userinDb.roles[0]=="MAGENT"){
+            userRole= 'Marketing Agent';
+        }else if(userinDb.roles[0]=="SHEAD"){
+            userRole= 'Sales Head';
+        }else if(userinDb.roles[0]=="SAGENT"){
+            userRole= 'Sales Agent';
+        }else if(userinDb.roles[0]=="CSAGENT"){
+            userRole= 'CS Agent';
+        }
+
         return{
-            'logo': userinDb.company.logo,
             'company_name': userinDb.company.name,
             'user_name':userinDb.fullname,
             'company_email': userinDb.company.email,
-            'role': userinDb.roles[0]
+            'role': userRole,
+            'logo': userinDb.company.logo
+
         }
     }
 }

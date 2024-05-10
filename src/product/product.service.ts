@@ -36,7 +36,7 @@ export class ProductService {
             description:1,
             unit_price:1,
             quantity:1
-        }).exec()
+        }).sort({updatedAt:-1}) .exec()
         .catch(()=>{
             throw new NotFoundException();
         }); 
