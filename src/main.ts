@@ -30,7 +30,7 @@ async function bootstrap() {
       'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept',
     );
     res.header({
-      'Access-Control-Allow-Origin': 'http://localhost:5174',
+      'Access-Control-Allow-Origin': configService.get('FRONTEND_WEB_URL'),
     });
     next();
   });

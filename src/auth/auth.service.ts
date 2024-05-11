@@ -32,6 +32,7 @@ export class AuthService {
                 const user= new this.userModel(dto);
                 await user.save();
                 isUnique = false;
+                const backend_url= this.configService.get('BACKEND_SERVER_URL')
                 await this.mailerService.sendMail({
                     to:dto.email,
                     from: `ProfitPulse CRM<${this.configService.get('GMAIL_USER')}>`,
@@ -39,7 +40,7 @@ export class AuthService {
                    template: 'verification',
                    context:{
                     fullname: dto.fullname,
-                    url: `http://localhost:3333/auth/verify/${user.verificationlink}`
+                    url: `${backend_url}/auth/verify/${user.verificationlink}`
                    }
                 });
 
@@ -118,10 +119,11 @@ export class AuthService {
             { isVerified:true },
             {new:true}
         ).exec();
+        const frontend_url= this.configService.get('FRONTEND_WEB_URL')
         if(!user){
-            return {url:'https://localhost:5174/verify-account/failure'};
+            return {url:`${frontend_url}/verify-account/failure`};
         }
-        return {url:'https://localhost:5174/verify-account/success'}
+        return {url:`${frontend_url}/verify-account/success`}
     }
 
     async forgotPassword(dto:ForgotPasswordDto){
@@ -134,7 +136,8 @@ export class AuthService {
         }
         const code = uuidv4();
         const hash = await argon.hash(code);
-
+        const frontend_url= this.configService.get('FRONTEND_WEB_URL');
+        const url= frontend_url+'/signin';
         await this.temppassModel.create({
             user: user.id,
             temporaryPassword:hash,
@@ -146,7 +149,8 @@ export class AuthService {
                template: 'forgotpassword',
                context:{
                 name: user.fullname,
-                password: code
+                password: code,
+                url: url
                }
             });
         })

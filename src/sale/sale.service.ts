@@ -8,6 +8,7 @@ import { User } from 'src/auth/schema';
 import { Contact } from 'src/contact/schema';
 import { Product } from 'src/product/schema';
 import axios from 'axios';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class SaleService {
@@ -16,8 +17,7 @@ export class SaleService {
         @InjectModel(User.name) private userModel: Model<User>,
         @InjectModel(Contact.name) private contactModel: Model<Contact>,
         @InjectModel(Product.name) private productModel: Model<Product>,
-
-
+        private configService: ConfigService
     ){}
     async importFile(user:ReqUser, fileDto:SalesFileDto){
         const jsonData = JSON.parse(fileDto.file.buffer.toString());
@@ -240,7 +240,8 @@ export class SaleService {
         });
 
         try {
-            const response = await axios.post('http://localhost:3000/sales_chat', {
+            const ai_server= this.configService.get('AI_SERVER_URL');
+            const response = await axios.post(`${ai_server}/sales_chat`, {
               query_str: dto.prompt,
               sales: sales
             });

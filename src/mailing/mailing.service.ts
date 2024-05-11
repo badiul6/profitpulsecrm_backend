@@ -217,11 +217,11 @@ export class MailingService {
       );
 
       const template = Handlebars.compile(emailDto.html_template);
-
+      const backend_url= this.config.get('BACKEND_SERVER_URL');
       for (var i = 0; i < emailDto.mailing_list.length; i++) {
         const html = template({
           name: userDetails[i].fullname,
-          trackinglink: `http://localhost:3333/campaign/click?campaign=${campaign.id}&url=${emailDto.url}&email=${userDetails[i].email}`,
+          trackinglink: `${backend_url}/campaign/click?campaign=${campaign.id}&url=${emailDto.url}&email=${userDetails[i].email}`,
         });
         const raw = [
           `From: ${userinDB.fullname}< ${emailAddress}>`,
