@@ -1,4 +1,4 @@
-import { ConflictException, ForbiddenException, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotAcceptableException, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { AuthDto, ForgotPasswordDto, ReqUser } from './dto';
 import * as argon from 'argon2';
 import { Role, TemporaryPassword, User } from './schema';
@@ -132,7 +132,7 @@ export class AuthService {
             throw new NotFoundException('No user exists with this email');
         }
         if(!user.roles.includes(Role.OWNER)){
-            throw new NotFoundException('Contact your company owner for password reset');
+            throw new NotAcceptableException('Contact your company owner for password reset');
         }
         const code = uuidv4();
         const hash = await argon.hash(code);
