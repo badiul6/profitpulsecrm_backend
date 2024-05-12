@@ -7,9 +7,16 @@ import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth/auth.service';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { urlencoded, json } from 'express';
+import {readFileSync} from 'fs';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const httpsOptions = {
+    key: readFileSync('./secrets/cert.key'),
+    cert: readFileSync('./secrets/cert.crt'),
+  };
+  const app = await NestFactory.create(AppModule,{
+    httpsOptions
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({

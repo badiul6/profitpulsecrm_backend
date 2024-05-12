@@ -75,5 +75,10 @@ export class AuthController {
       return this.authService.forgotPassword(dto);
     }
 
+    @Get('me')
+    me(){
+      return {me:'me'};
+    }
+
    
 }
