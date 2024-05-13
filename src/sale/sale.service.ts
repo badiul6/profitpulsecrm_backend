@@ -98,6 +98,7 @@ export class SaleService {
                 location:1,
                 shipping_cost:1,
                 notes:1,
+                createdAt:1
             }
             
         ).populate({
@@ -155,9 +156,6 @@ export class SaleService {
             {
                 $project: {
                     _id:0,
-                   
-                    createdAt: 0, 
-                    updatedAt: 0,
                     __v: 0,
                     "user._id": 0,
                     "user.password": 0,
