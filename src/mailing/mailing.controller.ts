@@ -3,7 +3,7 @@ import { MailingService } from './mailing.service';
 import { AuthenticatedGuard, RolesGuard } from 'src/auth/guard';
 import { GetUser, Roles } from 'src/auth/decorator';
 import { ReqUser } from 'src/auth/dto';
-import { ConnectGmailDto, InReplyToDto, MarketingEmailsDto, ReadMsgDto, SendEmailDto } from './dto';
+import { AiChatDto, ConnectGmailDto, InReplyToDto, MarketingEmailsDto, ReadMsgDto, SendEmailDto } from './dto';
 import { Role } from 'src/auth/schema';
 
 @Controller('mailing')
@@ -56,5 +56,12 @@ export class MailingController {
     @UseGuards(AuthenticatedGuard)
     getConnection(@GetUser() user:ReqUser){
         return this.mailingService.getConnection(user);
+    }
+
+    @Get('ai-chat')
+    @UseGuards(AuthenticatedGuard, RolesGuard)
+    @Roles(Role.MAGENT)
+    aiChat(@Query() dto:AiChatDto){
+        return this.mailingService.aiChat(dto);
     }
 }

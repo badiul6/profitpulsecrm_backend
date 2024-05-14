@@ -12,6 +12,7 @@ import { Contact } from 'src/contact/schema';
 import { Gmail } from './schema';
 import { ConfigService } from '@nestjs/config';
 import {
+  AiChatDto,
   ConnectGmailDto,
   InReplyToDto,
   MarketingEmailsDto,
@@ -22,6 +23,7 @@ import { ReqUser } from 'src/auth/dto';
 import { google } from 'googleapis';
 import Handlebars from 'handlebars';
 import { Campaign } from 'src/campaign/schema';
+import axios from 'axios';
 var Batchelor = require('batchelor');
 var parseMessage = require('gmail-api-parse-message');
 
@@ -409,6 +411,19 @@ export class MailingService {
       });
       return;
     } catch (error) {
+      throw new NotFoundException();
+    }
+  }
+
+  async aiChat(dto:AiChatDto){
+    try {
+      const ai_server= this.config.get('AI_SERVER_URL');
+      const response = await axios.post(`${ai_server}/market-generate`, {
+        prompt: dto.prompt,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to send sales data', error);
       throw new NotFoundException();
     }
   }
